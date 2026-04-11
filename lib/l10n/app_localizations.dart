@@ -404,6 +404,82 @@ class AppLocalizations {
   String get neck => _t('الرقبة', 'Neck');
   String get waist => _t('الخصر', 'Waist');
   String get hips => _t('الأرداف', 'Hips');
+
+  // ── Tutorial ──
+  String get tutorialSkip => _t('تخطّي', 'Skip');
+  String get tutorialNext => _t('التالي', 'Next');
+  String get tutorialDone => _t('تمام', 'Got it');
+  String get tutorialReplayTitle => _t('إعادة عرض الشرح', 'Replay tutorial');
+  String get tutorialReplaySubtitle =>
+      _t('شاهد جولة المميزات من جديد', 'See the feature tour again');
+  String get tutorialReplayConfirmSnack => _t(
+        'سيتم عرض الشرح عند زيارة كل قسم',
+        'Tutorial will show when you visit each tab',
+      );
+
+  // Habits tab
+  String get tutorialHabitsAddTitle => _t('أضف أول عادة', 'Add your first habit');
+  String get tutorialHabitsAddBody => _t(
+        'اضغط هنا لإنشاء عادة يومية تريد متابعتها',
+        'Tap here to create a daily habit you want to track',
+      );
+  String get tutorialHabitsTrackTitle =>
+      _t('تتبّع تقدّمك', 'Track your progress');
+  String get tutorialHabitsTrackBody => _t(
+        'اضغط على العادة لتعليمها كمُنجَزة، واسحبها لليسار لحذفها',
+        'Tap a habit to mark it done, swipe left to delete',
+      );
+  String get tutorialHabitsHistoryTitle => _t('شوف سجلّك', 'See your history');
+  String get tutorialHabitsHistoryBody => _t(
+        'التقويم والإحصائيات توضّح لك تقدّمك عبر الوقت',
+        'Calendar and stats show your progress over time',
+      );
+
+  // Fitness tab
+  String get tutorialFitnessWeekTitle => _t('ابدأ أسبوعك', 'Start your week');
+  String get tutorialFitnessWeekBody => _t(
+        'أنشئ أسبوع تدريب لتسجيل تغذيتك ووزنك وقياساتك',
+        'Create a training week to log nutrition, weight, and measurements',
+      );
+  String get tutorialFitnessOpenTitle =>
+      _t('كل شيء في مكانه', 'Everything in one place');
+  String get tutorialFitnessOpenBody => _t(
+        'افتح الأسبوع لتسجّل التغذية، الوزن، الخطوات، التقييم، والقياسات',
+        'Open a week to log nutrition, weight, steps, assessment, and measurements',
+      );
+
+  // Water tab
+  String get tutorialWaterLogTitle => _t('سجّل الماء بسرعة', 'Log water fast');
+  String get tutorialWaterLogBody => _t(
+        'اضغط على زجاجة لإضافة كمية الماء فوراً',
+        'Tap a bottle to instantly add water',
+      );
+  String get tutorialWaterGoalTitle =>
+      _t('حدّد هدفك اليومي', 'Set your daily goal');
+  String get tutorialWaterGoalBody => _t(
+        'اضبط كمية الماء المطلوبة كل يوم من هنا',
+        'Adjust your daily water target here',
+      );
+
+  // Tools tab
+  String get tutorialToolsCalculatorsTitle =>
+      _t('حاسبات جاهزة', 'Built-in calculators');
+  String get tutorialToolsCalculatorsBody => _t(
+        '6 حاسبات تساعدك: الماء، الماكروز، BMI، 1RM، نسبة الدهون، والوزن المثالي',
+        '6 calculators to help you: water, macros, BMI, 1RM, body fat, and ideal weight',
+      );
+  String get tutorialToolsHealthTitle =>
+      _t('مزامنة Apple Health', 'Apple Health sync');
+  String get tutorialToolsHealthBody => _t(
+        'فعّل المزامنة لاستيراد وزنك وخطواتك تلقائياً',
+        'Enable to auto-import your weight and steps',
+      );
+  String get tutorialToolsBackupTitle =>
+      _t('احفظ بياناتك', 'Back up your data');
+  String get tutorialToolsBackupBody => _t(
+        'صدّر نسخة احتياطية حتى لا تفقد تقدّمك أبداً',
+        'Export a backup so you never lose your progress',
+      );
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
