@@ -14,6 +14,7 @@ import 'screens/water_tracker/water_tracking_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'services/widget_service.dart';
 import 'services/health_service.dart';
+import 'services/tutorial_service.dart';
 import 'utils/app_theme.dart';
 
 void main() async {
@@ -21,6 +22,7 @@ void main() async {
   await initializeDateFormatting('ar');
   await initializeDateFormatting('en');
   await WidgetService.initialize();
+  await TutorialService.instance.reload();
   final savedLocale = await LocaleProvider.getSavedLocale();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
@@ -170,10 +172,31 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     );
   }
 
+  void _handleTabEntered(int index) {
+    const map = {
+      0: TabId.habits,
+      1: TabId.fitness,
+      2: TabId.water,
+      3: TabId.tools,
+    };
+    final tab = map[index];
+    if (tab != null) {
+      TutorialService.instance.onTabEntered(tab);
+    }
+  }
+
   Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
     final isActive = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        if (index != _currentIndex) {
+          // Dismiss any in-flight tutorial on the old tab without marking
+          // it as seen — the tutorial will fire again when the user returns.
+          TutorialService.instance.dismissActive();
+        }
+        setState(() => _currentIndex = index);
+        _handleTabEntered(index);
+      },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 72,
