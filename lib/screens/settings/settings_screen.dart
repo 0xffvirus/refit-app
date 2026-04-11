@@ -71,10 +71,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Scroll the upcoming target into view. Fires for every target
         // (including the first) regardless of whether the user advanced
         // via the Next button or by tapping the spotlighted widget.
+        //
+        // Backup is the last real content in the ListView — `ensureVisible`
+        // with `alignment: 0.5` would be capped by `maxScrollExtent` and
+        // leave the section only half-visible. For that step we instead
+        // scroll to the bottom of the list so the Backup Column sits in
+        // the upper portion of the viewport with the Replay tile below.
+        if (identify == 'tools_backup') {
+          if (_scrollController.hasClients) {
+            await _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOut,
+            );
+          }
+          return;
+        }
         final GlobalKey? key = switch (identify) {
           'tools_calculators' => _calculatorsKey,
           'tools_health' => _appleHealthKey,
-          'tools_backup' => _backupKey,
           _ => null,
         };
         final ctx = key?.currentContext;
@@ -100,11 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: Text(l.tools)),
       body: ListView(
         controller: _scrollController,
-        // Extra bottom padding gives the tutorial's Scrollable.ensureVisible
-        // enough room to center the Backup section (which is the last
-        // target). Without it, maxScrollExtent caps the scroll and the
-        // target lands at the very bottom of the viewport.
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 260),
+        padding: const EdgeInsets.all(16),
         children: [
           Column(
             key: _calculatorsKey,
