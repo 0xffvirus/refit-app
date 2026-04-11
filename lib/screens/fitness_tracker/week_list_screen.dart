@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/fitness_week.dart';
 import '../../providers/fitness_provider.dart';
+import '../../services/tutorial_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/tutorial/tutorial_steps.dart';
 import 'week_detail_screen.dart';
 
 class WeekListScreen extends StatefulWidget {
@@ -15,12 +17,90 @@ class WeekListScreen extends StatefulWidget {
 }
 
 class _WeekListScreenState extends State<WeekListScreen> {
+  final _fabKey = GlobalKey();
+  final _firstWeekKey = GlobalKey();
+
+  bool _firstVisitShown = false;
+  bool _firstVisitComplete = false;
+  bool _deferredShown = false;
+  int _lastWeekCount = 0;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
+      if (!mounted) return;
       context.read<FitnessProvider>().initialize();
     });
+    TutorialService.instance.pendingTab.addListener(_onPendingTab);
+  }
+
+  @override
+  void dispose() {
+    TutorialService.instance.pendingTab.removeListener(_onPendingTab);
+    super.dispose();
+  }
+
+  void _onPendingTab() {
+    if (TutorialService.instance.pendingTab.value != TabId.fitness) return;
+    if (!mounted || _firstVisitShown) return;
+    _firstVisitShown = true;
+    TutorialService.instance.clearPending(TabId.fitness);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _showFirstVisitTour();
+    });
+  }
+
+  void _showFirstVisitTour() {
+    showCoachMarks(
+      context: context,
+      targets: fitnessFirstVisitTargets(
+        context: context,
+        fabKey: _fabKey,
+      ),
+      onSeen: () async {
+        _firstVisitComplete = true;
+        await TutorialService.instance.markSeen(TabId.fitness);
+        _maybeStartDeferred();
+      },
+    );
+  }
+
+  void _maybeStartDeferred() {
+    if (!_firstVisitComplete || _deferredShown) return;
+    final weeks = context.read<FitnessProvider>().weeks;
+    if (weeks.isNotEmpty) {
+      _showDeferredTour();
+    }
+  }
+
+  void _showDeferredTour() {
+    if (_deferredShown) return;
+    _deferredShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      showCoachMarks(
+        context: context,
+        targets: fitnessDeferredTargets(
+          context: context,
+          weekCardKey: _firstWeekKey,
+        ),
+        onSeen: () {
+          // Bonus tip — flag already set.
+        },
+      );
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final count = context.watch<FitnessProvider>().weeks.length;
+    if (count > 0 && _lastWeekCount == 0 && _firstVisitComplete && !_deferredShown) {
+      _showDeferredTour();
+    }
+    _lastWeekCount = count;
   }
 
   @override
@@ -47,6 +127,7 @@ class _WeekListScreenState extends State<WeekListScreen> {
             )
           : _buildGroupedList(context, provider),
       floatingActionButton: FloatingActionButton(
+        key: _fabKey,
         onPressed: () => _showCreateOptions(context, provider),
         child: const Icon(Icons.add, size: 28),
       ),
@@ -89,14 +170,21 @@ class _WeekListScreenState extends State<WeekListScreen> {
                 ),
               ),
             ),
-            ...weeks.map((week) => _buildWeekCard(context, week)),
+            ...weeks.asMap().entries.map((entry) {
+              final isFirstOverall = i == 0 && entry.key == 0;
+              return _buildWeekCard(
+                context,
+                entry.value,
+                keyOverride: isFirstOverall ? _firstWeekKey : null,
+              );
+            }),
           ],
         );
       },
     );
   }
 
-  Widget _buildWeekCard(BuildContext context, FitnessWeek week) {
+  Widget _buildWeekCard(BuildContext context, FitnessWeek week, {Key? keyOverride}) {
     final l = AppLocalizations.of(context);
     final dateFormat = DateFormat('d/M');
     final startStr = dateFormat.format(week.startDate);
@@ -107,6 +195,7 @@ class _WeekListScreenState extends State<WeekListScreen> {
         now.isBefore(week.endDate.add(const Duration(days: 1)));
 
     return GestureDetector(
+      key: keyOverride,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => WeekDetailScreen(week: week)),
