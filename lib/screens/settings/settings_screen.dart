@@ -71,25 +71,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Scroll the upcoming target into view. Fires for every target
         // (including the first) regardless of whether the user advanced
         // via the Next button or by tapping the spotlighted widget.
-        //
-        // Backup is the last real content in the ListView — `ensureVisible`
-        // with `alignment: 0.5` would be capped by `maxScrollExtent` and
-        // leave the section only half-visible. For that step we instead
-        // scroll to the bottom of the list so the Backup Column sits in
-        // the upper portion of the viewport with the Replay tile below.
-        if (identify == 'tools_backup') {
-          if (_scrollController.hasClients) {
-            await _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeInOut,
-            );
-          }
-          return;
-        }
         final GlobalKey? key = switch (identify) {
           'tools_calculators' => _calculatorsKey,
           'tools_health' => _appleHealthKey,
+          'tools_backup' => _backupKey,
           _ => null,
         };
         final ctx = key?.currentContext;
@@ -329,75 +314,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          Column(
+          Text(
+            l.backup,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 10),
+          Container(
             key: _backupKey,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l.backup,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border, width: 0.5),
-                ),
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.info.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.upload_file_rounded, color: AppColors.info, size: 20),
-                      ),
-                      title: Text(l.exportBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                      subtitle: Text(l.exportBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      onTap: () => _exportBackup(context),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border, width: 0.5),
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.info.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const Divider(height: 1, indent: 16, endIndent: 16),
-                    ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.download_rounded, color: AppColors.success, size: 20),
-                      ),
-                      title: Text(l.importBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                      subtitle: Text(l.importBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      onTap: () => _importBackup(context),
+                    child: const Icon(Icons.upload_file_rounded, color: AppColors.info, size: 20),
+                  ),
+                  title: Text(l.exportBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  subtitle: Text(l.exportBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  onTap: () => _exportBackup(context),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ],
+                    child: const Icon(Icons.download_rounded, color: AppColors.success, size: 20),
+                  ),
+                  title: Text(l.importBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  subtitle: Text(l.importBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  onTap: () => _importBackup(context),
                 ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border, width: 0.5),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border, width: 0.5),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.textSecondary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l.backupNote,
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.textSecondary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l.backupNote,
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           Text(
