@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/water_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../services/tutorial_service.dart';
+import '../../widgets/tutorial/tutorial_steps.dart';
 
 const _waterColor = Color(0xFF4FC3F7);
 const _waterColorDark = Color(0xFF0288D1);
@@ -27,6 +29,10 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
   late AnimationController _waveController;
   late AnimationController _splashController;
   late Animation<double> _splashAnimation;
+  final _bottlesKey = GlobalKey();
+  final _goalKey = GlobalKey();
+  bool _tutorialShown = false;
+
   @override
   void initState() {
     super.initState();
@@ -44,15 +50,44 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
     );
 
     Future.microtask(() {
+      if (!mounted) return;
       context.read<WaterProvider>().initialize();
     });
+
+    TutorialService.instance.pendingTab.addListener(_onPendingTab);
   }
 
   @override
   void dispose() {
     _waveController.dispose();
     _splashController.dispose();
+    TutorialService.instance.pendingTab.removeListener(_onPendingTab);
     super.dispose();
+  }
+
+  void _onPendingTab() {
+    if (TutorialService.instance.pendingTab.value != TabId.water) return;
+    if (!mounted || _tutorialShown) return;
+    _tutorialShown = true;
+    TutorialService.instance.clearPending(TabId.water);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _showTour();
+    });
+  }
+
+  void _showTour() {
+    showCoachMarks(
+      context: context,
+      targets: waterTargets(
+        context: context,
+        bottlesKey: _bottlesKey,
+        goalKey: _goalKey,
+      ),
+      onSeen: () async {
+        await TutorialService.instance.markSeen(TabId.water);
+      },
+    );
   }
 
   void _onAddWater(int ml) {
@@ -70,6 +105,7 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
         title: Text(l.waterTracking),
         actions: [
           IconButton(
+            key: _goalKey,
             icon: const Icon(Icons.tune_rounded, size: 22),
             onPressed: () => _showSetGoalDialog(context, provider),
           ),
@@ -173,6 +209,7 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
   Widget _buildBottleButtons(WaterProvider provider) {
     final l = AppLocalizations.of(context);
     return Row(
+      key: _bottlesKey,
       children: _bottlePresets.map((preset) {
         final label = preset.ml >= 1000
             ? '${(preset.ml / 1000).toStringAsFixed(1)} ${l.liter}'
