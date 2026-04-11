@@ -91,7 +91,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: Text(l.tools)),
       body: ListView(
         controller: _scrollController,
-        padding: const EdgeInsets.all(16),
+        // Extra bottom padding gives the tutorial's Scrollable.ensureVisible
+        // enough room to center the Backup section (which is the last
+        // target). Without it, maxScrollExtent caps the scroll and the
+        // target lands at the very bottom of the viewport.
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 260),
         children: [
           Column(
             key: _calculatorsKey,
