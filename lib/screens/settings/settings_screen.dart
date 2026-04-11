@@ -58,7 +58,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  void _showTour() {
+  void _showTour() async {
+    // Reset the ListView to the top so the first target (calculators) is
+    // fully in view before the overlay renders. Guards against the case
+    // where the user scrolled the list before the tutorial fired.
+    if (_scrollController.hasClients) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
+    if (!mounted) return;
     showCoachMarks(
       context: context,
       targets: toolsTargets(
