@@ -58,18 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  void _showTour() async {
-    // Reset the ListView to the top so the first target (calculators) is
-    // fully in view before the overlay renders. Guards against the case
-    // where the user scrolled the list before the tutorial fired.
-    if (_scrollController.hasClients) {
-      await _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-    }
-    if (!mounted) return;
+  void _showTour() {
     showCoachMarks(
       context: context,
       targets: toolsTargets(
@@ -78,6 +67,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
         appleHealthKey: Platform.isIOS ? _appleHealthKey : null,
         backupKey: _backupKey,
       ),
+      beforeShowTarget: (identify) async {
+        // Scroll the upcoming target into view. Fires for every target
+        // (including the first) regardless of whether the user advanced
+        // via the Next button or by tapping the spotlighted widget.
+        final GlobalKey? key = switch (identify) {
+          'tools_calculators' => _calculatorsKey,
+          'tools_health' => _appleHealthKey,
+          'tools_backup' => _backupKey,
+          _ => null,
+        };
+        final ctx = key?.currentContext;
+        if (ctx != null) {
+          await Scrollable.ensureVisible(
+            ctx,
+            alignment: 0.5,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOut,
+          );
+        }
+      },
       onSeen: () async {
         await TutorialService.instance.markSeen(TabId.tools);
       },

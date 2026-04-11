@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../../l10n/app_localizations.dart';
@@ -10,11 +12,6 @@ import 'tutorial_theme.dart';
 /// the next step, or — on the last step — triggers TutorialCoachMark's
 /// `onFinish` hook. The Skip button calls `controller.skip()` which
 /// triggers the `onSkip` hook (which marks the tab as seen).
-///
-/// If [scrollToNextKey] is provided, tapping Next will first scroll that
-/// widget into view (for off-screen targets on long lists like Settings),
-/// then advance. The target is centered in the viewport so there's room
-/// for the tooltip above or below it.
 TargetFocus _target({
   required String identify,
   required GlobalKey key,
@@ -25,7 +22,6 @@ TargetFocus _target({
   required ContentAlign align,
   double paddingFocus = 8,
   ShapeLightFocus shape = ShapeLightFocus.RRect,
-  GlobalKey? scrollToNextKey,
 }) {
   return TargetFocus(
     identify: identify,
@@ -41,33 +37,12 @@ TargetFocus _target({
           body: body,
           currentStep: step,
           totalSteps: total,
-          onNext: () {
-            _advanceWithScroll(controller, scrollToNextKey);
-          },
+          onNext: () => controller.next(),
           onSkip: () => controller.skip(),
         ),
       ),
     ],
   );
-}
-
-/// Scrolls the next target into view (if any) then advances the tour.
-/// Wrapped in a non-async function because `VoidCallback` doesn't accept
-/// a `Future<void> Function()`.
-void _advanceWithScroll(
-  TutorialCoachMarkController controller,
-  GlobalKey? scrollToNextKey,
-) async {
-  final ctx = scrollToNextKey?.currentContext;
-  if (ctx != null) {
-    await Scrollable.ensureVisible(
-      ctx,
-      alignment: 0.5,
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeInOut,
-    );
-  }
-  controller.next();
 }
 
 /// Launches a coach-mark tour. Used by each tab screen.
@@ -77,10 +52,17 @@ void _advanceWithScroll(
 /// NOT called when `TutorialService.dismissActive()` tears the overlay
 /// down (tab switch), so the flag remains unset and the tour fires again
 /// on return.
+///
+/// [beforeShowTarget] is called (and awaited) BEFORE the spotlight moves
+/// to each target — from both Next-button advancement AND target-tap
+/// advancement. Use it to scroll the target into view on long scrolling
+/// screens like Settings. The callback receives the `identify` string of
+/// the target about to be shown.
 void showCoachMarks({
   required BuildContext context,
   required List<TargetFocus> targets,
   required VoidCallback onSeen,
+  FutureOr<void> Function(String identify)? beforeShowTarget,
 }) {
   final coach = TutorialCoachMark(
     targets: targets,
@@ -88,6 +70,14 @@ void showCoachMarks({
     opacityShadow: 0.75,
     paddingFocus: 8,
     hideSkip: true, // we render our own skip inside the tooltip
+    beforeFocus: beforeShowTarget == null
+        ? null
+        : (target) async {
+            final id = target.identify?.toString();
+            if (id != null) {
+              await beforeShowTarget(id);
+            }
+          },
     onFinish: () {
       final dismissed = TutorialService.instance.isDismissing;
       TutorialService.instance.clearActive();
@@ -249,9 +239,10 @@ List<TargetFocus> toolsTargets({
   final hasHealth = appleHealthKey != null;
   final total = hasHealth ? 3 : 2;
 
-  // The Tools screen is a scrolling ListView. Each step pre-scrolls the
-  // NEXT target into view before advancing, so the spotlight never lands
-  // on a clipped / off-screen widget.
+  // The Tools screen is a scrolling ListView. Scrolling the upcoming
+  // target into view is handled by `beforeShowTarget` on the caller side
+  // (see `_showTour` in settings_screen.dart) — that hook fires both on
+  // Next-button advance and on target-tap advance.
   final targets = <TargetFocus>[
     _target(
       identify: 'tools_calculators',
@@ -261,7 +252,6 @@ List<TargetFocus> toolsTargets({
       step: 1,
       total: total,
       align: ContentAlign.bottom,
-      scrollToNextKey: hasHealth ? appleHealthKey : backupKey,
     ),
   ];
 
@@ -275,7 +265,6 @@ List<TargetFocus> toolsTargets({
         step: 2,
         total: total,
         align: ContentAlign.bottom,
-        scrollToNextKey: backupKey,
       ),
     );
   }
