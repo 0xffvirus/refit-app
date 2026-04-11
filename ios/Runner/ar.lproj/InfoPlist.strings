@@ -1,0 +1,4 @@
+"NSHealthShareUsageDescription" = "يحتاج التطبيق الوصول لبيانات الصحة لمزامنة التغذية والوزن والنوم والخطوات";
+"NSHealthUpdateUsageDescription" = "يحتاج التطبيق لحفظ بيانات التغذية والوزن والنوم والخطوات في تطبيق الصحة";
+"NSPhotoLibraryUsageDescription" = "يحتاج التطبيق الوصول للصور لحفظ صور قياسات الجسم";
+"NSCameraUsageDescription" = "يحتاج التطبيق للكاميرا لالتقاط صور قياسات الجسم";

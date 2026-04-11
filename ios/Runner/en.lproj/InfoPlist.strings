@@ -1,0 +1,4 @@
+"NSHealthShareUsageDescription" = "This app needs access to your health data to sync nutrition, weight, sleep, and steps.";
+"NSHealthUpdateUsageDescription" = "This app needs to save nutrition, weight, sleep, and steps data to the Health app.";
+"NSPhotoLibraryUsageDescription" = "This app needs access to your photos to save body measurement photos.";
+"NSCameraUsageDescription" = "This app needs camera access to take body measurement photos.";
