@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/habit.dart';
 import '../../providers/habit_provider.dart';
+import '../../services/tutorial_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/tutorial/tutorial_steps.dart';
 import '../../l10n/app_localizations.dart';
 import 'habit_stats_screen.dart';
 import 'mood_sleep_screen.dart';
@@ -18,12 +20,104 @@ class HabitGridScreen extends StatefulWidget {
 class _HabitGridScreenState extends State<HabitGridScreen> {
   DateTime _selectedDate = DateTime.now();
 
+  final _fabKey = GlobalKey();
+  final _actionsKey = GlobalKey();
+  final _firstHabitKey = GlobalKey();
+
+  bool _firstVisitShown = false;
+  bool _firstVisitComplete = false;
+  bool _deferredShown = false;
+  int _lastHabitCount = 0;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
+      if (!mounted) return;
       context.read<HabitProvider>().initialize();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Habits is the default landing tab — trigger here since MainShell
+      // never sees a "first entry" for it on app open.
+      TutorialService.instance.onTabEntered(TabId.habits);
+    });
+    TutorialService.instance.pendingTab.addListener(_onPendingTab);
+  }
+
+  @override
+  void dispose() {
+    TutorialService.instance.pendingTab.removeListener(_onPendingTab);
+    super.dispose();
+  }
+
+  void _onPendingTab() {
+    if (TutorialService.instance.pendingTab.value != TabId.habits) return;
+    if (!mounted || _firstVisitShown) return;
+    _firstVisitShown = true;
+    TutorialService.instance.clearPending(TabId.habits);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _showFirstVisitTour();
+    });
+  }
+
+  void _showFirstVisitTour() {
+    showCoachMarks(
+      context: context,
+      targets: habitsFirstVisitTargets(
+        context: context,
+        fabKey: _fabKey,
+        actionsKey: _actionsKey,
+      ),
+      onSeen: () async {
+        // First-visit tour genuinely finished or skipped. Mark the tab as
+        // seen immediately so the app never re-shows this tour on restart.
+        // The deferred habit-card tip is in-memory-gated and fires as a
+        // bonus tip once habits exist in the current session.
+        _firstVisitComplete = true;
+        await TutorialService.instance.markSeen(TabId.habits);
+        _maybeStartDeferred();
+      },
+    );
+  }
+
+  void _maybeStartDeferred() {
+    if (!_firstVisitComplete || _deferredShown) return;
+    final provider = context.read<HabitProvider>();
+    if (provider.habits.isNotEmpty) {
+      _showDeferredTour();
+    }
+    // Else: didChangeDependencies catches the transition when the user
+    // adds their first habit.
+  }
+
+  void _showDeferredTour() {
+    if (_deferredShown) return;
+    _deferredShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      showCoachMarks(
+        context: context,
+        targets: habitsDeferredTargets(
+          context: context,
+          habitCardKey: _firstHabitKey,
+        ),
+        onSeen: () {
+          // Bonus tip — flag already set in first-visit onSeen. Nothing
+          // more to persist.
+        },
+      );
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final count = context.watch<HabitProvider>().habits.length;
+    if (count > 0 && _lastHabitCount == 0 && _firstVisitComplete && !_deferredShown) {
+      _showDeferredTour();
+    }
+    _lastHabitCount = count;
   }
 
   @override
@@ -43,19 +137,25 @@ class _HabitGridScreenState extends State<HabitGridScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_month_rounded, size: 22),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const HabitCalendarScreen()),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.bar_chart_rounded, size: 22),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const HabitStatsScreen()),
-            ),
+          Row(
+            key: _actionsKey,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.calendar_month_rounded, size: 22),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HabitCalendarScreen()),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.bar_chart_rounded, size: 22),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HabitStatsScreen()),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -67,6 +167,7 @@ class _HabitGridScreenState extends State<HabitGridScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        key: _fabKey,
         onPressed: () => _showAddHabitDialog(context, provider),
         child: const Icon(Icons.add, size: 28),
       ),
@@ -321,13 +422,22 @@ class _HabitGridScreenState extends State<HabitGridScreen> {
         final completed = provider.isHabitCompletedOnDate(habit.id, _selectedDate);
         final streak = provider.streaks[habit.id] ?? 0;
 
-        return _HabitCard(
+        return KeyedSubtree(
           key: ValueKey(habit.id),
-          habit: habit,
-          completed: completed,
-          streak: streak,
-          onToggle: () => provider.toggleHabitForDate(habit.id, _selectedDate),
-          onDelete: () => _confirmDeleteHabit(context, habit, provider),
+          child: Container(
+            // _firstHabitKey is the spotlight anchor for the first card
+            // only. ReorderableListView needs a unique key on each child,
+            // which KeyedSubtree provides.
+            key: i == 0 ? _firstHabitKey : null,
+            child: _HabitCard(
+              key: ValueKey('card_${habit.id}'),
+              habit: habit,
+              completed: completed,
+              streak: streak,
+              onToggle: () => provider.toggleHabitForDate(habit.id, _selectedDate),
+              onDelete: () => _confirmDeleteHabit(context, habit, provider),
+            ),
+          ),
         );
       },
     );
