@@ -10,6 +10,8 @@ import '../../providers/water_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/health_service.dart';
+import '../../services/tutorial_service.dart';
+import '../../widgets/tutorial/tutorial_steps.dart';
 import '../../utils/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import 'one_rep_max_screen.dart';
@@ -18,8 +20,58 @@ import 'ideal_weight_screen.dart';
 
 const _waterColor = Color(0xFF4FC3F7);
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final _calculatorsKey = GlobalKey();
+  final _appleHealthKey = GlobalKey();
+  final _backupKey = GlobalKey();
+  final _scrollController = ScrollController();
+  bool _tutorialShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    TutorialService.instance.pendingTab.addListener(_onPendingTab);
+  }
+
+  @override
+  void dispose() {
+    TutorialService.instance.pendingTab.removeListener(_onPendingTab);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onPendingTab() {
+    if (TutorialService.instance.pendingTab.value != TabId.tools) return;
+    if (!mounted || _tutorialShown) return;
+    _tutorialShown = true;
+    TutorialService.instance.clearPending(TabId.tools);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _showTour();
+    });
+  }
+
+  void _showTour() {
+    showCoachMarks(
+      context: context,
+      targets: toolsTargets(
+        context: context,
+        calculatorsKey: _calculatorsKey,
+        appleHealthKey: Platform.isIOS ? _appleHealthKey : null,
+        backupKey: _backupKey,
+      ),
+      onSeen: () async {
+        await TutorialService.instance.markSeen(TabId.tools);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,170 +79,183 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l.tools)),
       body: ListView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
         children: [
-          Text(
-            l.calculators,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border, width: 0.5),
-            ),
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+          Column(
+            key: _calculatorsKey,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.calculators,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 10),
+              Container(
                 decoration: BoxDecoration(
-                  color: _waterColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 0.5),
                 ),
-                child: const Icon(Icons.water_drop, size: 20, color: _waterColor),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _waterColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.water_drop, size: 20, color: _waterColor),
+                  ),
+                  title: Text(l.waterIntakeCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  subtitle: Text(l.waterIntakeDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WaterIntakeCalculatorScreen()),
+                  ),
+                ),
               ),
-              title: Text(l.waterIntakeCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              subtitle: Text(l.waterIntakeDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const WaterIntakeCalculatorScreen()),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border, width: 0.5),
-            ),
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+              const SizedBox(height: 8),
+              Container(
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 0.5),
                 ),
-                child: const Icon(Icons.local_fire_department, size: 20, color: AppColors.warning),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.local_fire_department, size: 20, color: AppColors.warning),
+                  ),
+                  title: Text(l.macroCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  subtitle: Text(l.macroCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MacroCalculatorScreen()),
+                  ),
+                ),
               ),
-              title: Text(l.macroCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              subtitle: Text(l.macroCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MacroCalculatorScreen()),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border, width: 0.5),
-            ),
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+              const SizedBox(height: 8),
+              Container(
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 0.5),
                 ),
-                child: const Icon(Icons.monitor_weight_outlined, size: 20, color: AppColors.success),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.monitor_weight_outlined, size: 20, color: AppColors.success),
+                  ),
+                  title: Text(l.bmiCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  subtitle: Text(l.bmiCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BmiCalculatorScreen()),
+                  ),
+                ),
               ),
-              title: Text(l.bmiCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              subtitle: Text(l.bmiCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const BmiCalculatorScreen()),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border, width: 0.5),
-            ),
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+              const SizedBox(height: 8),
+              Container(
                 decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 0.5),
                 ),
-                child: const Icon(Icons.fitness_center, size: 20, color: AppColors.error),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.fitness_center, size: 20, color: AppColors.error),
+                  ),
+                  title: Text(l.oneRmCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  subtitle: Text(l.oneRmCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const OneRepMaxScreen()),
+                  ),
+                ),
               ),
-              title: Text(l.oneRmCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              subtitle: Text(l.oneRmCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const OneRepMaxScreen()),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border, width: 0.5),
-            ),
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+              const SizedBox(height: 8),
+              Container(
                 decoration: BoxDecoration(
-                  color: AppColors.mood.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 0.5),
                 ),
-                child: const Icon(Icons.percent, size: 20, color: AppColors.mood),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.mood.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.percent, size: 20, color: AppColors.mood),
+                  ),
+                  title: Text(l.bodyFatCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  subtitle: Text(l.bodyFatCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BodyFatScreen()),
+                  ),
+                ),
               ),
-              title: Text(l.bodyFatCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              subtitle: Text(l.bodyFatCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const BodyFatScreen()),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border, width: 0.5),
-            ),
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+              const SizedBox(height: 8),
+              Container(
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 0.5),
                 ),
-                child: const Icon(Icons.accessibility_new, size: 20, color: AppColors.accent),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.accessibility_new, size: 20, color: AppColors.accent),
+                  ),
+                  title: Text(l.idealWeightCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  subtitle: Text(l.idealWeightCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const IdealWeightScreen()),
+                  ),
+                ),
               ),
-              title: Text(l.idealWeightCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              subtitle: Text(l.idealWeightCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const IdealWeightScreen()),
-              ),
-            ),
+            ],
           ),
           if (Platform.isIOS) ...[
             const SizedBox(height: 24),
-            Text(
-              l.appleHealth,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            Column(
+              key: _appleHealthKey,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.appleHealth,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 10),
+                _HealthSyncTile(),
+              ],
             ),
-            const SizedBox(height: 10),
-            _HealthSyncTile(),
           ],
           const SizedBox(height: 24),
           Text(
@@ -229,8 +294,79 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
+          Column(
+            key: _backupKey,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.backup,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 0.5),
+                ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.info.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.upload_file_rounded, color: AppColors.info, size: 20),
+                      ),
+                      title: Text(l.exportBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      subtitle: Text(l.exportBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      onTap: () => _exportBackup(context),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.download_rounded, color: AppColors.success, size: 20),
+                      ),
+                      title: Text(l.importBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      subtitle: Text(l.importBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      onTap: () => _importBackup(context),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border, width: 0.5),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.textSecondary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l.backupNote,
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
           Text(
-            l.backup,
+            l.tools,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 10),
@@ -240,59 +376,34 @@ class SettingsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border, width: 0.5),
             ),
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.info.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.upload_file_rounded, color: AppColors.info, size: 20),
-                  ),
-                  title: Text(l.exportBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.exportBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  onTap: () => _exportBackup(context),
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const Divider(height: 1, indent: 16, endIndent: 16),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.download_rounded, color: AppColors.success, size: 20),
-                  ),
-                  title: Text(l.importBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.importBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  onTap: () => _importBackup(context),
-                ),
-              ],
+                child: const Icon(Icons.replay_rounded, size: 20, color: AppColors.accent),
+              ),
+              title: Text(
+                l.tutorialReplayTitle,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              subtitle: Text(
+                l.tutorialReplaySubtitle,
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+              onTap: () async {
+                await TutorialService.instance.resetAllFlags();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l.tutorialReplayConfirmSnack)),
+                );
+              },
             ),
           ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border, width: 0.5),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.textSecondary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l.backupNote,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
