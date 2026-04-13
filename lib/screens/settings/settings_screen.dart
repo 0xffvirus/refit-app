@@ -14,9 +14,11 @@ import '../../services/tutorial_service.dart';
 import '../../widgets/tutorial/tutorial_steps.dart';
 import '../../utils/app_theme.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/user_profile.dart';
 import 'one_rep_max_screen.dart';
 import 'body_fat_screen.dart';
 import 'ideal_weight_screen.dart';
+import 'profile_edit_screen.dart';
 
 const _waterColor = Color(0xFF4FC3F7);
 
@@ -33,10 +35,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _backupKey = GlobalKey();
   final _scrollController = ScrollController();
   bool _tutorialShown = false;
+  UserProfile? _profile;
 
   @override
   void initState() {
     super.initState();
+    _loadProfile();
     TutorialService.instance.pendingTab.addListener(_onPendingTab);
   }
 
@@ -93,6 +97,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _loadProfile() async {
+    final profile = await DatabaseService().fetchUserProfile();
+    if (mounted) setState(() => _profile = profile);
+  }
+
+  Widget _buildProfileCard(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final p = _profile;
+    final hasData = p != null && !p.isEmpty;
+    final initials = hasData && p.name != null && p.name!.isNotEmpty
+        ? p.name!.substring(0, 1).toUpperCase()
+        : '?';
+
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProfileEditScreen(profile: p ?? UserProfile(onboardingSeen: true)),
+          ),
+        );
+        if (result == true) _loadProfile();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: hasData
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p.name ?? l.profileTitle,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          [
+                            if (p.age != null) '${p.age} ${l.profileYears}',
+                            if (p.heightCm != null) '${p.heightCm!.toStringAsFixed(0)} ${l.profileCm}',
+                            if (p.weightKg != null) '${p.weightKg!.toStringAsFixed(0)} ${l.profileKg}',
+                          ].join(' · '),
+                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      l.setupProfile,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+            ),
+            const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -102,6 +189,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
         children: [
+          _buildProfileCard(context),
+          const SizedBox(height: 24),
           Column(
             key: _calculatorsKey,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,6 +505,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   SnackBar(content: Text(l.tutorialReplayConfirmSnack)),
                 );
               },
+            ),
+          ),
+          const SizedBox(height: 32),
+          Center(
+            child: Text(
+              'Made by Bahaa Najjar',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
           const SizedBox(height: 24),
