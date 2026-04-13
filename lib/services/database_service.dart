@@ -14,9 +14,10 @@ import '../models/weekly_assessment.dart';
 import '../models/body_measurement.dart';
 import '../models/water_entry.dart';
 import '../models/step_entry.dart';
+import '../models/user_profile.dart';
 
 const _databaseName = 'habit_game.db';
-const _databaseVersion = 5;
+const _databaseVersion = 6;
 
 const _defaultHabits = [
   'Go to the gym',
@@ -217,6 +218,20 @@ class DatabaseService {
 
     await db.insert('step_goal', {'id': 1, 'daily_goal': 10000});
 
+    // ── user profile (singleton) ──
+    await db.execute('''
+      CREATE TABLE user_profile (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        name TEXT,
+        gender TEXT,
+        age INTEGER,
+        height_cm REAL,
+        weight_kg REAL,
+        onboarding_seen INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.insert('user_profile', {'id': 1, 'onboarding_seen': 0});
+
     // Seed default habits
     for (int i = 0; i < _defaultHabits.length; i++) {
       await db.insert('habits', {
@@ -293,6 +308,21 @@ class DatabaseService {
       await db.insert('step_goal', {'id': 1, 'daily_goal': 10000},
           conflictAlgorithm: ConflictAlgorithm.ignore);
     }
+    if (oldVersion < 6) {
+      await db.execute('''
+        CREATE TABLE user_profile (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          name TEXT,
+          gender TEXT,
+          age INTEGER,
+          height_cm REAL,
+          weight_kg REAL,
+          onboarding_seen INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+      // Existing user upgrading — skip onboarding
+      await db.insert('user_profile', {'id': 1, 'onboarding_seen': 1});
+    }
   }
 
   // ── Macro Targets ──
@@ -341,6 +371,27 @@ class DatabaseService {
     await db.update(
       'step_goal',
       {'daily_goal': goal},
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+  }
+
+  // ── User Profile ──
+
+  Future<UserProfile> fetchUserProfile() async {
+    final db = await database;
+    final rows = await db.query('user_profile', where: 'id = ?', whereArgs: [1]);
+    if (rows.isEmpty) {
+      return UserProfile();
+    }
+    return UserProfile.fromMap(rows.first);
+  }
+
+  Future<void> updateUserProfile(UserProfile profile) async {
+    final db = await database;
+    await db.update(
+      'user_profile',
+      profile.toMap(),
       where: 'id = ?',
       whereArgs: [1],
     );
@@ -703,6 +754,7 @@ class DatabaseService {
     'water_entries',
     'step_entries',
     'step_goal',
+    'user_profile',
   ];
 
   Future<String> exportToJson() async {
@@ -752,6 +804,10 @@ class DatabaseService {
           );
         }
       }
+
+      // Prevent onboarding re-trigger after import
+      await txn.update('user_profile', {'onboarding_seen': 1},
+          where: 'id = ?', whereArgs: [1]);
     });
   }
 
