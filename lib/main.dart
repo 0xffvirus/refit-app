@@ -12,6 +12,9 @@ import 'screens/habit_tracker/habit_grid_screen.dart';
 import 'screens/fitness_tracker/week_list_screen.dart';
 import 'screens/water_tracker/water_tracking_screen.dart';
 import 'screens/settings/settings_screen.dart';
+import 'models/user_profile.dart';
+import 'screens/onboarding/onboarding_screen.dart';
+import 'services/database_service.dart';
 import 'services/widget_service.dart';
 import 'services/health_service.dart';
 import 'services/tutorial_service.dart';
@@ -72,7 +75,20 @@ class HabitGameApp extends StatelessWidget {
                 child: child!,
               );
             },
-            home: const MainShell(),
+            home: FutureBuilder<UserProfile>(
+              future: DatabaseService().fetchUserProfile(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (!snapshot.data!.onboardingSeen) {
+                  return const OnboardingScreen();
+                }
+                return const MainShell();
+              },
+            ),
           );
         },
       ),
