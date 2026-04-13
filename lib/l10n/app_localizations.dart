@@ -480,6 +480,23 @@ class AppLocalizations {
         'صدّر نسخة احتياطية حتى لا تفقد تقدّمك أبداً',
         'Export a backup so you never lose your progress',
       );
+
+  // ── Profile ──
+  String get profileTitle => _t('الملف الشخصي', 'Profile');
+  String get setupProfile => _t('إعداد الملف الشخصي', 'Set Up Your Profile');
+  String get welcomeTitle => _t('مرحبًا بك!', 'Welcome!');
+  String get welcomeSubtitle => _t('أدخل بياناتك لتجربة أفضل', 'Enter your info for a better experience');
+  String get profileName => _t('الاسم', 'Name');
+  String get profileAge => _t('العمر', 'Age');
+  String get profileHeight => _t('الطول (سم)', 'Height (cm)');
+  String get profileWeight => _t('الوزن (كجم)', 'Weight (kg)');
+  String get start => _t('ابدأ', 'Start');
+  String get skip => _t('تخطي', 'Skip');
+  String get profileSaved => _t('تم حفظ الملف الشخصي', 'Profile saved');
+  String get profileYears => _t('سنة', 'years');
+  String get profileCm => _t('سم', 'cm');
+  String get profileKg => _t('كجم', 'kg');
+  String get gender => _t('الجنس', 'Gender');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
