@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/user_profile.dart';
+import '../../services/database_service.dart';
 import '../../utils/app_theme.dart';
 
 enum _BfGender { male, female }
@@ -21,6 +23,25 @@ class _BodyFatScreenState extends State<BodyFatScreen> {
 
   _BfGender _gender = _BfGender.male;
   double? _bodyFat;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromProfile();
+  }
+
+  Future<void> _prefillFromProfile() async {
+    final profile = await DatabaseService().fetchUserProfile();
+    if (!mounted) return;
+    if (profile.heightCm != null && _heightController.text.isEmpty) {
+      _heightController.text = profile.heightCm!.toStringAsFixed(0);
+    }
+    if (profile.gender != null) {
+      setState(() {
+        _gender = profile.gender == Gender.male ? _BfGender.male : _BfGender.female;
+      });
+    }
+  }
 
   @override
   void dispose() {

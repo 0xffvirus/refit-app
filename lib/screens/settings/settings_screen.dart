@@ -675,6 +675,20 @@ class _WaterIntakeCalculatorScreenState extends State<WaterIntakeCalculatorScree
   int? _resultMl;
 
   @override
+  void initState() {
+    super.initState();
+    _prefillFromProfile();
+  }
+
+  Future<void> _prefillFromProfile() async {
+    final profile = await DatabaseService().fetchUserProfile();
+    if (!mounted) return;
+    if (profile.weightKg != null && _weightController.text.isEmpty) {
+      _weightController.text = profile.weightKg!.toStringAsFixed(0);
+    }
+  }
+
+  @override
   void dispose() {
     _weightController.dispose();
     super.dispose();
@@ -932,6 +946,31 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
   int? _proteinG;
   int? _fatG;
   int? _carbsG;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromProfile();
+  }
+
+  Future<void> _prefillFromProfile() async {
+    final profile = await DatabaseService().fetchUserProfile();
+    if (!mounted) return;
+    if (profile.weightKg != null && _weightController.text.isEmpty) {
+      _weightController.text = profile.weightKg!.toStringAsFixed(0);
+    }
+    if (profile.heightCm != null && _heightController.text.isEmpty) {
+      _heightController.text = profile.heightCm!.toStringAsFixed(0);
+    }
+    if (profile.age != null && _ageController.text.isEmpty) {
+      _ageController.text = profile.age.toString();
+    }
+    if (profile.gender != null) {
+      setState(() {
+        _gender = profile.gender == Gender.male ? _Gender.male : _Gender.female;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -1458,6 +1497,23 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
   double? _bmi;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromProfile();
+  }
+
+  Future<void> _prefillFromProfile() async {
+    final profile = await DatabaseService().fetchUserProfile();
+    if (!mounted) return;
+    if (profile.weightKg != null && _weightController.text.isEmpty) {
+      _weightController.text = profile.weightKg!.toStringAsFixed(0);
+    }
+    if (profile.heightCm != null && _heightController.text.isEmpty) {
+      _heightController.text = profile.heightCm!.toStringAsFixed(0);
+    }
+  }
 
   @override
   void dispose() {

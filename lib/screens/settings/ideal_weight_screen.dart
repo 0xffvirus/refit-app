@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/user_profile.dart';
+import '../../services/database_service.dart';
 import '../../utils/app_theme.dart';
 
 enum _IwGender { male, female }
@@ -28,6 +30,25 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
   double? _bmiHigh;
   double? _average;
   _FrameSize? _frame;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromProfile();
+  }
+
+  Future<void> _prefillFromProfile() async {
+    final profile = await DatabaseService().fetchUserProfile();
+    if (!mounted) return;
+    if (profile.heightCm != null && _heightController.text.isEmpty) {
+      _heightController.text = profile.heightCm!.toStringAsFixed(0);
+    }
+    if (profile.gender != null) {
+      setState(() {
+        _gender = profile.gender == Gender.male ? _IwGender.male : _IwGender.female;
+      });
+    }
+  }
 
   @override
   void dispose() {
