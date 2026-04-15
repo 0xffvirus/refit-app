@@ -17,6 +17,7 @@ import 'screens/onboarding/onboarding_screen.dart';
 import 'services/database_service.dart';
 import 'services/widget_service.dart';
 import 'services/health_service.dart';
+import 'services/notification_service.dart';
 import 'services/tutorial_service.dart';
 import 'utils/app_theme.dart';
 
@@ -25,6 +26,7 @@ void main() async {
   await initializeDateFormatting('ar');
   await initializeDateFormatting('en');
   await WidgetService.initialize();
+  await NotificationService.instance.initialize();
   await TutorialService.instance.reload();
   final savedLocale = await LocaleProvider.getSavedLocale();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(

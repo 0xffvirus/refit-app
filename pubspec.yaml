@@ -29,6 +29,8 @@ dependencies:
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
   tutorial_coach_mark: ^1.2.12
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
 
 dependency_overrides:
   device_info_plus: 11.3.3

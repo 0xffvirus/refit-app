@@ -3,10 +3,12 @@ import 'package:uuid/uuid.dart';
 import '../models/water_entry.dart';
 import '../services/database_service.dart';
 import '../services/health_service.dart';
+import '../services/notification_service.dart';
 
 class WaterProvider extends ChangeNotifier {
   final DatabaseService _db = DatabaseService();
   final HealthService _health = HealthService();
+  final NotificationService _notifications = NotificationService();
   final _uuid = const Uuid();
 
   int _dailyGoalMl = 2500;
@@ -50,6 +52,8 @@ class WaterProvider extends ChangeNotifier {
     );
     await _db.insertWaterEntry(entry);
     _health.writeWaterIntake(amountMl, _selectedDate);
+    // Suppress the next reminder if it's within the hour — user just hydrated.
+    _notifications.rescheduleAfterLog();
     await _loadEntries();
     notifyListeners();
   }

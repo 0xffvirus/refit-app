@@ -117,11 +117,6 @@ class HealthService {
   }
 
   Future<void> _syncNutrition(String weekId, DateTime date, DateTime start, DateTime end) async {
-    // Skip if manual entry exists
-    final existing = await _db.fetchNutritionForWeek(weekId);
-    final dateStr = _dateOnly(date);
-    if (existing.any((e) => _dateOnly(e.date) == dateStr)) return;
-
     try {
       final caloriesData = await Health().getHealthDataFromTypes(
         startTime: start, endTime: end,
@@ -160,10 +155,6 @@ class HealthService {
   }
 
   Future<void> _syncWeight(String weekId, DateTime date, DateTime start, DateTime end) async {
-    final existing = await _db.fetchWeightsForWeek(weekId);
-    final dateStr = _dateOnly(date);
-    if (existing.any((e) => _dateOnly(e.date) == dateStr)) return;
-
     try {
       final data = await Health().getHealthDataFromTypes(
         startTime: start, endTime: end,
@@ -186,11 +177,6 @@ class HealthService {
   }
 
   Future<void> _syncSleep(DateTime date, DateTime start, DateTime end) async {
-    // Sleep: check previous night (sleep data for "date" is usually recorded overnight)
-    final dateStr = _dateOnly(date);
-    final logs = await _db.fetchDailyLogsForMonth(date.year, date.month);
-    if (logs.any((l) => _dateOnly(l.date) == dateStr)) return;
-
     try {
       // Look at the night before: from previous day 8pm to this day noon
       final sleepStart = DateTime(date.year, date.month, date.day - 1, 20);

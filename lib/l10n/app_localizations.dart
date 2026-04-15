@@ -254,6 +254,18 @@ class AppLocalizations {
   String get dailyNeeds => _t('احتياجك اليومي', 'Your Daily Needs');
   String get setAsDailyGoal => _t('تعيين كهدف يومي', 'Set as Daily Goal');
   String get waterGoalUpdated => _t('تم تحديث هدف شرب الماء', 'Water goal updated');
+
+  // ── Notifications ──
+  String get notifications => _t('الإشعارات', 'Notifications');
+  String get waterReminders => _t('تذكير شرب الماء', 'Water Reminders');
+  String get waterRemindersDesc => _t(
+    'تلقي إشعارات لشرب الماء خلال اليوم',
+    'Get reminders to drink water throughout the day',
+  );
+  String get notificationsPermissionDenied => _t(
+    'لم يتم منح إذن الإشعارات',
+    'Notification permission denied',
+  );
   String get waterFormula => _t('المعادلة: الوزن (كجم) × المعدل (مل/كجم) = الاحتياج اليومي', 'Formula: Weight (kg) x Rate (ml/kg) = Daily Needs');
   String mlPerKg(int value) => _t('$value مل/كجم', '$value ml/kg');
   String get liter => _t('لتر', 'L');

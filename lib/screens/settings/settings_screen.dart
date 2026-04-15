@@ -10,6 +10,7 @@ import '../../providers/water_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/health_service.dart';
+import '../../services/notification_service.dart';
 import '../../services/tutorial_service.dart';
 import '../../widgets/tutorial/tutorial_steps.dart';
 import '../../utils/app_theme.dart';
@@ -349,6 +350,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.notifications,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 10),
+              _WaterReminderTile(),
             ],
           ),
           if (Platform.isIOS) ...[
@@ -1920,6 +1933,60 @@ class _HealthSyncTileState extends State<_HealthSyncTile> {
           style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
         ),
         trailing: _loading
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            : Switch(value: _enabled, onChanged: _toggle),
+      ),
+    );
+  }
+}
+
+class _WaterReminderTile extends StatefulWidget {
+  @override
+  State<_WaterReminderTile> createState() => _WaterReminderTileState();
+}
+
+class _WaterReminderTileState extends State<_WaterReminderTile> {
+  final _notifications = NotificationService.instance;
+  late bool _enabled = _notifications.isEnabled;
+  bool _busy = false;
+
+  Future<void> _toggle(bool value) async {
+    setState(() => _busy = true);
+    final applied = await _notifications.setEnabled(value);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _enabled = _notifications.isEnabled;
+    });
+    if (value && !applied) {
+      final l = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.notificationsPermissionDenied)),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _waterColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.notifications_active_rounded, size: 20, color: _waterColor),
+        ),
+        title: Text(l.waterReminders, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        subtitle: Text(l.waterRemindersDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        trailing: _busy
             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
             : Switch(value: _enabled, onChanged: _toggle),
       ),
