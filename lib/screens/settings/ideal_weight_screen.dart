@@ -45,7 +45,9 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
     }
     if (profile.gender != null) {
       setState(() {
-        _gender = profile.gender == Gender.male ? _IwGender.male : _IwGender.female;
+        _gender = profile.gender == Gender.male
+            ? _IwGender.male
+            : _IwGender.female;
       });
     }
   }
@@ -141,8 +143,17 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
             width: double.infinity,
             height: 50,
             child: FilledButton(
-              onPressed: () { FocusScope.of(context).unfocus(); _calculate(); },
-              child: Text(l.calculate, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                _calculate();
+              },
+              child: Text(
+                l.calculate,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
           if (_average != null) ...[
@@ -181,13 +192,28 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.dataSection, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.dataSection,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
-              _choiceChip(l.male, _gender == _IwGender.male, () => setState(() => _gender = _IwGender.male)),
+              _choiceChip(
+                l.male,
+                _gender == _IwGender.male,
+                () => setState(() => _gender = _IwGender.male),
+              ),
               const SizedBox(width: 8),
-              _choiceChip(l.female, _gender == _IwGender.female, () => setState(() => _gender = _IwGender.female)),
+              _choiceChip(
+                l.female,
+                _gender == _IwGender.female,
+                () => setState(() => _gender = _IwGender.female),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -221,7 +247,13 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
       ),
       child: Column(
         children: [
-          Text(l.estimatedIdealWeight, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+          Text(
+            l.estimatedIdealWeight,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 8),
           TweenAnimationBuilder<double>(
             tween: Tween<double>(end: adjusted),
@@ -230,7 +262,11 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
             builder: (context, value, _) {
               return Text(
                 '${value.toStringAsFixed(1)} ${l.kg}',
-                style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: AppColors.accent),
+                style: const TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.accent,
+                ),
               );
             },
           ),
@@ -238,7 +274,10 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
             const SizedBox(height: 4),
             Text(
               l.frameAdjusted(frameSizeLabels[_frame]!),
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ],
@@ -263,11 +302,22 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l.healthyRange, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.success)),
+                Text(
+                  l.healthyRange,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.success,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '${_bmiLow!.toStringAsFixed(1)} - ${_bmiHigh!.toStringAsFixed(1)} ${l.kg}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.success),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.success,
+                  ),
                 ),
               ],
             ),
@@ -289,7 +339,14 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.formulaBreakdown, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.formulaBreakdown,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           _formulaRow('Devine', _devine!),
           _formulaRow('Robinson', _robinson!),
@@ -307,15 +364,31 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Expanded(child: Text(name, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary))),
+          Expanded(
+            child: Text(
+              name,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
           if (_frame != null && _frame != _FrameSize.medium)
             Text(
               '${value.toStringAsFixed(1)} → ',
-              style: const TextStyle(fontSize: 12, color: AppColors.textTertiary, decoration: TextDecoration.lineThrough),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+                decoration: TextDecoration.lineThrough,
+              ),
             ),
           Text(
             '${adjusted.toStringAsFixed(1)} ${l.kg}',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ],
       ),
@@ -339,7 +412,14 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.boneFrameSize, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.boneFrameSize,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             children: _FrameSize.values.map((f) {
@@ -349,7 +429,9 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.accent.withValues(alpha: 0.1) : Colors.transparent,
+                    color: isActive
+                        ? AppColors.accent.withValues(alpha: 0.1)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isActive ? AppColors.accent : AppColors.border,
@@ -362,16 +444,26 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
                         frameSizeLabels[f]!,
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                          color: isActive ? AppColors.accent : AppColors.textSecondary,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                          color: isActive
+                              ? AppColors.accent
+                              : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        f == _FrameSize.small ? '-10%' : f == _FrameSize.large ? '+10%' : '±0%',
+                        f == _FrameSize.small
+                            ? '-10%'
+                            : f == _FrameSize.large
+                            ? '+10%'
+                            : '±0%',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isActive ? AppColors.accent.withValues(alpha: 0.7) : AppColors.textTertiary,
+                          color: isActive
+                              ? AppColors.accent.withValues(alpha: 0.7)
+                              : AppColors.textTertiary,
                         ),
                       ),
                     ],
@@ -397,15 +489,37 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.sources, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.sources,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
-          Text(l.idealWeightSources, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.6)),
+          Text(
+            l.idealWeightSources,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+              height: 1.6,
+            ),
+          ),
           const SizedBox(height: 8),
           GestureDetector(
-            onTap: () => launchUrl(Uri.parse('https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight')),
+            onTap: () => launchUrl(
+              Uri.parse(
+                'https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight',
+              ),
+            ),
             child: const Text(
               'who.int — Healthy BMI Range',
-              style: TextStyle(fontSize: 12, color: AppColors.info, decoration: TextDecoration.underline),
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.info,
+                decoration: TextDecoration.underline,
+              ),
             ),
           ),
         ],
@@ -425,15 +539,31 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.warning),
+          const Icon(
+            Icons.warning_amber_rounded,
+            size: 18,
+            color: AppColors.warning,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l.idealWeightDisclaimer, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(
+                  l.idealWeightDisclaimer,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text(l.medicalDisclaimer, style: const TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+                Text(
+                  l.medicalDisclaimer,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -449,9 +579,14 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: selected ? AppColors.accent.withValues(alpha: 0.1) : Colors.transparent,
+            color: selected
+                ? AppColors.accent.withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: selected ? AppColors.accent : AppColors.border, width: selected ? 1.5 : 0.5),
+            border: Border.all(
+              color: selected ? AppColors.accent : AppColors.border,
+              width: selected ? 1.5 : 0.5,
+            ),
           ),
           child: Text(
             label,
@@ -467,7 +602,11 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
     );
   }
 
-  Widget _inputField(TextEditingController controller, String hint, String suffix) {
+  Widget _inputField(
+    TextEditingController controller,
+    String hint,
+    String suffix,
+  ) {
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -476,8 +615,14 @@ class _IdealWeightScreenState extends State<IdealWeightScreen> {
         suffixText: suffix,
         filled: true,
         fillColor: AppColors.surfaceLight,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }

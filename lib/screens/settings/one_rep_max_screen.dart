@@ -81,8 +81,17 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
             width: double.infinity,
             height: 50,
             child: FilledButton(
-              onPressed: () { FocusScope.of(context).unfocus(); _calculate(); },
-              child: Text(l.calculate, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                _calculate();
+              },
+              child: Text(
+                l.calculate,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
           if (_average != null) ...[
@@ -113,7 +122,14 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.dataSection, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.dataSection,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           _inputField(_weightController, l.liftedWeight, l.kg),
           const SizedBox(height: 10),
@@ -134,7 +150,13 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
       ),
       child: Column(
         children: [
-          Text(l.estimatedMax, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+          Text(
+            l.estimatedMax,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 8),
           TweenAnimationBuilder<double>(
             tween: Tween<double>(end: _average!),
@@ -143,7 +165,11 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
             builder: (context, value, _) {
               return Text(
                 '${value.toStringAsFixed(1)} ${l.kg}',
-                style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: AppColors.error),
+                style: const TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.error,
+                ),
               );
             },
           ),
@@ -164,7 +190,14 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.formulaBreakdown, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.formulaBreakdown,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           _formulaRow('Epley', _epley!),
           _formulaRow('Brzycki', _brzycki!),
@@ -181,11 +214,21 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Text(name, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary)),
+            child: Text(
+              name,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+            ),
           ),
           Text(
             '${value.toStringAsFixed(1)} ${l.kg}',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ],
       ),
@@ -204,7 +247,14 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.percentageTable, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.percentageTable,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           ..._percentageTable.map((row) {
             final weight = _average! * row.percent / 100;
@@ -213,9 +263,13 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
               margin: const EdgeInsets.only(bottom: 4),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isMax ? AppColors.error.withValues(alpha: 0.1) : Colors.transparent,
+                color: isMax
+                    ? AppColors.error.withValues(alpha: 0.1)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
-                border: isMax ? Border.all(color: AppColors.error.withValues(alpha: 0.3)) : null,
+                border: isMax
+                    ? Border.all(color: AppColors.error.withValues(alpha: 0.3))
+                    : null,
               ),
               child: Row(
                 children: [
@@ -233,7 +287,10 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
                   Expanded(
                     child: Text(
                       '${row.reps} ${l.rep}',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                   Text(
@@ -265,12 +322,19 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.warning),
+          const Icon(
+            Icons.warning_amber_rounded,
+            size: 18,
+            color: AppColors.warning,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               l.oneRmDisclaimer,
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ],
@@ -278,17 +342,30 @@ class _OneRepMaxScreenState extends State<OneRepMaxScreen> {
     );
   }
 
-  Widget _inputField(TextEditingController controller, String hint, String suffix, {bool decimal = true}) {
+  Widget _inputField(
+    TextEditingController controller,
+    String hint,
+    String suffix, {
+    bool decimal = true,
+  }) {
     return TextField(
       controller: controller,
-      keyboardType: decimal ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.number,
+      keyboardType: decimal
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : TextInputType.number,
       decoration: InputDecoration(
         hintText: hint,
         suffixText: suffix.isNotEmpty ? suffix : null,
         filled: true,
         fillColor: AppColors.surfaceLight,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }

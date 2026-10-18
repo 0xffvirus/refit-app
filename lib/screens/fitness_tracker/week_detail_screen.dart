@@ -28,6 +28,7 @@ class _WeekDetailScreenState extends State<WeekDetailScreen> with TickerProvider
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     Future.microtask(() {
+      if (!mounted) return;
       context.read<FitnessProvider>().loadWeekDetails(widget.week.id);
     });
   }

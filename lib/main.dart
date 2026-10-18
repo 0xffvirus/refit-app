@@ -29,12 +29,14 @@ void main() async {
   await NotificationService.instance.initialize();
   await TutorialService.instance.reload();
   final savedLocale = await LocaleProvider.getSavedLocale();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppColors.background,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.background,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
   runApp(HabitGameApp(initialLocale: savedLocale));
 }
 
@@ -58,10 +60,7 @@ class HabitGameApp extends StatelessWidget {
             title: 'Refit',
             debugShowCheckedModeBanner: false,
             locale: localeProvider.locale,
-            supportedLocales: const [
-              Locale('ar'),
-              Locale('en'),
-            ],
+            supportedLocales: const [Locale('ar'), Locale('en')],
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -77,23 +76,71 @@ class HabitGameApp extends StatelessWidget {
                 child: child!,
               );
             },
-            home: FutureBuilder<UserProfile>(
-              future: DatabaseService().fetchUserProfile(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Scaffold(
-                    body: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                if (!snapshot.data!.onboardingSeen) {
-                  return const OnboardingScreen();
-                }
-                return const MainShell();
-              },
-            ),
+            home: const _StartupGate(),
           );
         },
       ),
+    );
+  }
+}
+
+/// Decides between onboarding and the main shell. The profile future is
+/// cached in state so locale changes (which rebuild [MaterialApp]) don't
+/// re-query the database, and a failed open shows a retry instead of an
+/// endless spinner.
+class _StartupGate extends StatefulWidget {
+  const _StartupGate();
+
+  @override
+  State<_StartupGate> createState() => _StartupGateState();
+}
+
+class _StartupGateState extends State<_StartupGate> {
+  late Future<UserProfile> _profile = DatabaseService().fetchUserProfile();
+
+  void _retry() {
+    setState(() => _profile = DatabaseService().fetchUserProfile());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<UserProfile>(
+      future: _profile,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          final l = AppLocalizations.of(context);
+          return Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(l.startupLoadFailed, textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    FilledButton(onPressed: _retry, child: Text(l.retry)),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (!snapshot.data!.onboardingSeen) {
+          return const OnboardingScreen();
+        }
+        return const MainShell();
+      },
     );
   }
 }
@@ -141,10 +188,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       _syncWidget();
     }
     if (state == AppLifecycleState.resumed) {
+      // The day may have rolled over while the app was in the background.
+      context.read<WaterProvider>().refreshForToday();
       _syncHealthOnStart();
     }
   }
@@ -163,10 +213,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
@@ -178,9 +225,24 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.check_circle_outline, Icons.check_circle, l.habits),
-                _buildNavItem(1, Icons.fitness_center_outlined, Icons.fitness_center, l.fitness),
-                _buildNavItem(2, Icons.water_drop_outlined, Icons.water_drop, l.water),
+                _buildNavItem(
+                  0,
+                  Icons.check_circle_outline,
+                  Icons.check_circle,
+                  l.habits,
+                ),
+                _buildNavItem(
+                  1,
+                  Icons.fitness_center_outlined,
+                  Icons.fitness_center,
+                  l.fitness,
+                ),
+                _buildNavItem(
+                  2,
+                  Icons.water_drop_outlined,
+                  Icons.water_drop,
+                  l.water,
+                ),
                 _buildNavItem(3, Icons.build_outlined, Icons.build, l.tools),
               ],
             ),
@@ -203,7 +265,12 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     }
   }
 
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
+  Widget _buildNavItem(
+    int index,
+    IconData icon,
+    IconData activeIcon,
+    String label,
+  ) {
     final isActive = _currentIndex == index;
     return GestureDetector(
       onTap: () {
@@ -230,7 +297,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               ),
               child: Icon(
                 isActive ? activeIcon : icon,
-                color: isActive ? AppColors.background : AppColors.textSecondary,
+                color: isActive
+                    ? AppColors.background
+                    : AppColors.textSecondary,
                 size: 22,
               ),
             ),

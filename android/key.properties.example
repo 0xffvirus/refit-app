@@ -1,0 +1,15 @@
+# Release signing for Android. Copy to android/key.properties (gitignored)
+# and fill in your own values. Never commit the real file or keystore.
+#
+# Alternatively, set the REFIT_KEYSTORE_PATH, REFIT_KEYSTORE_PASSWORD,
+# REFIT_KEY_ALIAS and REFIT_KEY_PASSWORD environment variables (e.g. in CI).
+#
+# Create a keystore with:
+#   keytool -genkey -v -keystore ~/refit-upload.jks -keyalg RSA \
+#     -keysize 2048 -validity 10000 -alias upload
+
+# Absolute path, or relative to the android/ directory.
+storeFile=/path/to/refit-upload.jks
+storePassword=
+keyAlias=upload
+keyPassword=
