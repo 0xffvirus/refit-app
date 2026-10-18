@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -15,14 +16,12 @@ import '../models/body_measurement.dart';
 import '../models/water_entry.dart';
 import '../models/step_entry.dart';
 import '../models/user_profile.dart';
+import 'backup_codec.dart';
 
 const _databaseName = 'habit_game.db';
 const _databaseVersion = 6;
 
-const _defaultHabits = [
-  'Go to the gym',
-  'Read for 15 min',
-];
+const _defaultHabits = ['Go to the gym', 'Read for 15 min'];
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -30,6 +29,7 @@ class DatabaseService {
   DatabaseService._internal();
 
   static Database? _database;
+  static String? _pathOverride;
   final _uuid = const Uuid();
 
   Future<Database> get database async {
@@ -37,9 +37,18 @@ class DatabaseService {
     return _database!;
   }
 
+  /// Closes the open database and optionally points the service at a
+  /// different path (e.g. `inMemoryDatabasePath`) for tests.
+  @visibleForTesting
+  static Future<void> resetForTesting({String? path}) async {
+    await _database?.close();
+    _database = null;
+    _pathOverride = path;
+  }
+
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = p.join(dbPath, _databaseName);
+    final path =
+        _pathOverride ?? p.join(await getDatabasesPath(), _databaseName);
 
     return await openDatabase(
       path,
@@ -269,8 +278,10 @@ class DatabaseService {
           daily_goal_ml INTEGER NOT NULL DEFAULT 2500
         )
       ''');
-      await db.insert('water_goal', {'id': 1, 'daily_goal_ml': 2500},
-          conflictAlgorithm: ConflictAlgorithm.ignore);
+      await db.insert('water_goal', {
+        'id': 1,
+        'daily_goal_ml': 2500,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
       await db.execute('''
         CREATE TABLE IF NOT EXISTS water_entries (
@@ -305,8 +316,10 @@ class DatabaseService {
           daily_goal INTEGER NOT NULL DEFAULT 10000
         )
       ''');
-      await db.insert('step_goal', {'id': 1, 'daily_goal': 10000},
-          conflictAlgorithm: ConflictAlgorithm.ignore);
+      await db.insert('step_goal', {
+        'id': 1,
+        'daily_goal': 10000,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
     if (oldVersion < 6) {
       await db.execute('''
@@ -325,11 +338,40 @@ class DatabaseService {
     }
   }
 
+  /// Writes [values] to the `id = 1` row of a singleton table, recreating the
+  /// row from [singletonDefaults] if it is missing so updates never silently
+  /// affect zero rows.
+  Future<void> _upsertSingleton(
+    String table,
+    Map<String, Object?> values,
+  ) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      final updated = await txn.update(
+        table,
+        values,
+        where: 'id = ?',
+        whereArgs: [1],
+      );
+      if (updated == 0) {
+        await txn.insert(table, {
+          ...singletonDefaults[table]!,
+          ...values,
+          'id': 1,
+        });
+      }
+    });
+  }
+
   // ── Macro Targets ──
 
   Future<Map<String, double>> fetchMacroTargets() async {
     final db = await database;
-    final rows = await db.query('macro_targets', where: 'id = ?', whereArgs: [1]);
+    final rows = await db.query(
+      'macro_targets',
+      where: 'id = ?',
+      whereArgs: [1],
+    );
     if (rows.isEmpty) {
       return {'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0};
     }
@@ -348,13 +390,12 @@ class DatabaseService {
     required double carbs,
     required double fat,
   }) async {
-    final db = await database;
-    await db.update(
-      'macro_targets',
-      {'calories': calories, 'protein': protein, 'carbs': carbs, 'fat': fat},
-      where: 'id = ?',
-      whereArgs: [1],
-    );
+    await _upsertSingleton('macro_targets', {
+      'calories': calories,
+      'protein': protein,
+      'carbs': carbs,
+      'fat': fat,
+    });
   }
 
   // ── Step Goal ──
@@ -367,20 +408,18 @@ class DatabaseService {
   }
 
   Future<void> updateStepGoal(int goal) async {
-    final db = await database;
-    await db.update(
-      'step_goal',
-      {'daily_goal': goal},
-      where: 'id = ?',
-      whereArgs: [1],
-    );
+    await _upsertSingleton('step_goal', {'daily_goal': goal});
   }
 
   // ── User Profile ──
 
   Future<UserProfile> fetchUserProfile() async {
     final db = await database;
-    final rows = await db.query('user_profile', where: 'id = ?', whereArgs: [1]);
+    final rows = await db.query(
+      'user_profile',
+      where: 'id = ?',
+      whereArgs: [1],
+    );
     if (rows.isEmpty) {
       return UserProfile();
     }
@@ -388,13 +427,7 @@ class DatabaseService {
   }
 
   Future<void> updateUserProfile(UserProfile profile) async {
-    final db = await database;
-    await db.update(
-      'user_profile',
-      profile.toMap(),
-      where: 'id = ?',
-      whereArgs: [1],
-    );
+    await _upsertSingleton('user_profile', profile.toMap());
   }
 
   // ── Habits ──
@@ -412,7 +445,12 @@ class DatabaseService {
 
   Future<void> updateHabit(Habit habit) async {
     final db = await database;
-    await db.update('habits', habit.toMap(), where: 'id = ?', whereArgs: [habit.id]);
+    await db.update(
+      'habits',
+      habit.toMap(),
+      where: 'id = ?',
+      whereArgs: [habit.id],
+    );
   }
 
   Future<void> deleteHabit(String habitId) async {
@@ -436,11 +474,15 @@ class DatabaseService {
 
   // ── Habit Entries ──
 
-  Future<List<HabitEntry>> fetchHabitEntriesForMonth(int year, int month) async {
+  Future<List<HabitEntry>> fetchHabitEntriesForMonth(
+    int year,
+    int month,
+  ) async {
     final db = await database;
     final startDate = '$year-${month.toString().padLeft(2, '0')}-01';
     final lastDay = DateTime(year, month + 1, 0).day;
-    final endDate = '$year-${month.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
+    final endDate =
+        '$year-${month.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
 
     final rows = await db.query(
       'habit_entries',
@@ -487,7 +529,8 @@ class DatabaseService {
     final db = await database;
     final startDate = '$year-${month.toString().padLeft(2, '0')}-01';
     final lastDay = DateTime(year, month + 1, 0).day;
-    final endDate = '$year-${month.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
+    final endDate =
+        '$year-${month.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
 
     final rows = await db.query(
       'daily_logs',
@@ -516,7 +559,8 @@ class DatabaseService {
 
   Future<FitnessWeek> createFitnessWeek(DateTime startDate) async {
     final db = await database;
-    final startStr = '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}';
+    final startStr =
+        '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}';
 
     // Return existing week if one with the same start date exists
     final existing = await db.query(
@@ -711,9 +755,7 @@ class DatabaseService {
   }
 
   Future<void> updateWaterGoal(int goalMl) async {
-    final db = await database;
-    await db.update('water_goal', {'daily_goal_ml': goalMl},
-        where: 'id = ?', whereArgs: [1]);
+    await _upsertSingleton('water_goal', {'daily_goal_ml': goalMl});
   }
 
   Future<List<WaterEntry>> fetchWaterEntriesForDate(DateTime date) async {
@@ -740,23 +782,6 @@ class DatabaseService {
 
   // ── Backup & Restore ──
 
-  static const _backupTables = [
-    'habits',
-    'habit_entries',
-    'daily_logs',
-    'fitness_weeks',
-    'nutrition_entries',
-    'weight_entries',
-    'weekly_assessments',
-    'body_measurements',
-    'macro_targets',
-    'water_goal',
-    'water_entries',
-    'step_entries',
-    'step_goal',
-    'user_profile',
-  ];
-
   Future<String> exportToJson() async {
     final db = await database;
     final Map<String, dynamic> backup = {
@@ -764,7 +789,7 @@ class DatabaseService {
       'exported_at': DateTime.now().toIso8601String(),
     };
 
-    for (final table in _backupTables) {
+    for (final table in backupTables) {
       final rows = await db.query(table);
       backup[table] = rows;
     }
@@ -775,39 +800,53 @@ class DatabaseService {
   Future<File> exportToFile() async {
     final jsonStr = await exportToJson();
     final dir = await getApplicationDocumentsDirectory();
-    final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .split('.')
+        .first;
     final file = File(p.join(dir.path, 'habit_game_backup_$timestamp.json'));
     await file.writeAsString(jsonStr);
     return file;
   }
 
+  /// Replaces all data with the contents of a backup. The backup is fully
+  /// validated first ([BackupFormatException] on failure) and restored in a
+  /// single transaction, so a bad file leaves existing data untouched.
   Future<void> importFromJson(String jsonStr) async {
-    final Map<String, dynamic> backup = jsonDecode(jsonStr) as Map<String, dynamic>;
+    final backup = parseBackup(jsonStr, currentVersion: _databaseVersion);
     final db = await database;
 
     await db.transaction((txn) async {
       // Clear all existing data in reverse dependency order
-      for (final table in _backupTables.reversed) {
+      for (final table in backupTables.reversed) {
         await txn.delete(table);
       }
 
-      // Restore each table
-      for (final table in _backupTables) {
-        final rows = backup[table] as List<dynamic>?;
-        if (rows == null) continue;
-
+      for (final table in backupTables) {
+        final rows = backup.tables[table] ?? const [];
+        final defaults = singletonDefaults[table];
+        if (defaults != null) {
+          // Older or partial backups may lack singleton rows; the app relies
+          // on them existing, so always recreate the row over defaults.
+          await txn.insert(table, {
+            ...defaults,
+            if (rows.isNotEmpty) ...rows.first,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+          continue;
+        }
         for (final row in rows) {
-          await txn.insert(
-            table,
-            Map<String, dynamic>.from(row as Map),
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+          await txn.insert(table, row);
         }
       }
 
       // Prevent onboarding re-trigger after import
-      await txn.update('user_profile', {'onboarding_seen': 1},
-          where: 'id = ?', whereArgs: [1]);
+      await txn.update(
+        'user_profile',
+        {'onboarding_seen': 1},
+        where: 'id = ?',
+        whereArgs: [1],
+      );
     });
   }
 

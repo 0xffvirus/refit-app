@@ -146,60 +146,62 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
                     wavePhase: _waveController.value,
                     splashValue: _splashAnimation.value,
                   ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TweenAnimationBuilder<int>(
-                      tween: IntTween(begin: 0, end: provider.totalMl),
-                      duration: const Duration(milliseconds: 1200),
-                      curve: Curves.easeInOut,
-                      builder: (context, value, _) {
-                        return Text(
-                          '$value',
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TweenAnimationBuilder<int>(
+                          tween: IntTween(begin: 0, end: provider.totalMl),
+                          duration: const Duration(milliseconds: 1200),
+                          curve: Curves.easeInOut,
+                          builder: (context, value, _) {
+                            return Text(
+                              '$value',
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                color: provider.percentage > 0.5
+                                    ? AppColors.background
+                                    : AppColors.textPrimary,
+                              ),
+                            );
+                          },
+                        ),
+                        Text(
+                          l.ofGoalMl(provider.dailyGoalMl),
                           style: TextStyle(
-                            fontSize: 42,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                             color: provider.percentage > 0.5
-                                ? AppColors.background
-                                : AppColors.textPrimary,
-                          ),
-                        );
-                      },
-                    ),
-                    Text(
-                      l.ofGoalMl(provider.dailyGoalMl),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: provider.percentage > 0.5
-                            ? AppColors.background.withValues(alpha: 0.7)
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (provider.goalReached)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${l.goalReached} 🎉',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.success,
+                                ? AppColors.background.withValues(alpha: 0.7)
+                                : AppColors.textSecondary,
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
+                        const SizedBox(height: 8),
+                        if (provider.goalReached)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${l.goalReached} 🎉',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
-          },
-        );
           },
         ),
       ),
@@ -229,7 +231,9 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
   }
 
   Widget _buildCustomAmountButton(
-      BuildContext context, WaterProvider provider) {
+    BuildContext context,
+    WaterProvider provider,
+  ) {
     return GestureDetector(
       onTap: () => _showCustomAmountDialog(context, provider),
       child: Container(
@@ -242,7 +246,11 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add_rounded, size: 20, color: AppColors.textSecondary),
+            const Icon(
+              Icons.add_rounded,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context).customAmount,
@@ -271,15 +279,24 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
         ),
         child: Column(
           children: [
-            Icon(Icons.water_drop_outlined,
-                size: 40, color: AppColors.textTertiary),
+            Icon(
+              Icons.water_drop_outlined,
+              size: 40,
+              color: AppColors.textTertiary,
+            ),
             const SizedBox(height: 12),
-            Text(l.noWaterYet,
-                style: const TextStyle(color: AppColors.textSecondary)),
+            Text(
+              l.noWaterYet,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
             const SizedBox(height: 4),
-            Text(l.tapToLog,
-                style:
-                    const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+            Text(
+              l.tapToLog,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+              ),
+            ),
           ],
         ),
       );
@@ -313,19 +330,16 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
                 color: AppColors.error,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child:
-                  const Icon(Icons.delete_rounded, color: Colors.white),
+              child: const Icon(Icons.delete_rounded, color: Colors.white),
             ),
             onDismissed: (_) => provider.removeEntry(entry.id),
             child: Container(
               margin: const EdgeInsets.only(bottom: 6),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: AppColors.border, width: 0.5),
+                border: Border.all(color: AppColors.border, width: 0.5),
               ),
               child: Row(
                 children: [
@@ -335,8 +349,11 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
                       color: _waterColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.water_drop,
-                        size: 18, color: _waterColor),
+                    child: const Icon(
+                      Icons.water_drop,
+                      size: 18,
+                      color: _waterColor,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -367,8 +384,9 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
 
   void _showSetGoalDialog(BuildContext context, WaterProvider provider) {
     final l = AppLocalizations.of(context);
-    final controller =
-        TextEditingController(text: provider.dailyGoalMl.toString());
+    final controller = TextEditingController(
+      text: provider.dailyGoalMl.toString(),
+    );
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -402,8 +420,7 @@ class _WaterTrackingScreenState extends State<WaterTrackingScreen>
     );
   }
 
-  void _showCustomAmountDialog(
-      BuildContext context, WaterProvider provider) {
+  void _showCustomAmountDialog(BuildContext context, WaterProvider provider) {
     final l = AppLocalizations.of(context);
     final controller = TextEditingController();
     showDialog(
@@ -467,9 +484,10 @@ class _BottleButtonState extends State<_BottleButton>
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -490,10 +508,7 @@ class _BottleButtonState extends State<_BottleButton>
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
+          return Transform.scale(scale: _scaleAnimation.value, child: child);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 18),
@@ -571,11 +586,11 @@ class _WaterTankPainter extends CustomPainter {
 
     for (double x = 0; x <= size.width; x++) {
       final normalizedX = x / size.width;
-      final wave1 = sin((normalizedX * 2 * pi) + (wavePhase * 2 * pi)) *
-          waveAmplitude;
+      final wave1 =
+          sin((normalizedX * 2 * pi) + (wavePhase * 2 * pi)) * waveAmplitude;
       final wave2 =
           sin((normalizedX * 4 * pi) + (wavePhase * 2 * pi * 1.5)) *
-              (waveAmplitude * 0.4);
+          (waveAmplitude * 0.4);
       final y = waterTop + wave1 + wave2;
       waterPath.lineTo(x, y);
     }
@@ -602,9 +617,8 @@ class _WaterTankPainter extends CustomPainter {
 
     for (double x = 0; x <= size.width; x++) {
       final normalizedX = x / size.width;
-      final wave = sin((normalizedX * 2.5 * pi) +
-              (wavePhase * 2 * pi) +
-              pi * 0.5) *
+      final wave =
+          sin((normalizedX * 2.5 * pi) + (wavePhase * 2 * pi) + pi * 0.5) *
           (waveAmplitude * 0.6);
       final y = waterTop + wave + 4;
       wave2Path.lineTo(x, y);
@@ -613,8 +627,7 @@ class _WaterTankPainter extends CustomPainter {
     wave2Path.lineTo(size.width, size.height);
     wave2Path.close();
 
-    final wave2Paint = Paint()
-      ..color = _waterColorDark.withValues(alpha: 0.3);
+    final wave2Paint = Paint()..color = _waterColorDark.withValues(alpha: 0.3);
     canvas.drawPath(wave2Path, wave2Paint);
 
     // Splash bubbles

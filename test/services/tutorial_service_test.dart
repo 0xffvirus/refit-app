@@ -11,12 +11,14 @@ void main() {
   });
 
   group('TutorialService flags', () {
-    test('shouldShowFor returns true for all tabs when nothing is stored',
-        () async {
-      for (final tab in TabId.values) {
-        expect(TutorialService.instance.shouldShowFor(tab), isTrue);
-      }
-    });
+    test(
+      'shouldShowFor returns true for all tabs when nothing is stored',
+      () async {
+        for (final tab in TabId.values) {
+          expect(TutorialService.instance.shouldShowFor(tab), isTrue);
+        }
+      },
+    );
 
     test('markSeen flips flag and persists across reload', () async {
       await TutorialService.instance.markSeen(TabId.habits);
