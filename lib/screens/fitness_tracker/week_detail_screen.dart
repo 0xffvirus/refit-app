@@ -20,7 +20,8 @@ class WeekDetailScreen extends StatefulWidget {
   State<WeekDetailScreen> createState() => _WeekDetailScreenState();
 }
 
-class _WeekDetailScreenState extends State<WeekDetailScreen> with TickerProviderStateMixin {
+class _WeekDetailScreenState extends State<WeekDetailScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -28,6 +29,7 @@ class _WeekDetailScreenState extends State<WeekDetailScreen> with TickerProvider
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     Future.microtask(() {
+      if (!mounted) return;
       context.read<FitnessProvider>().loadWeekDetails(widget.week.id);
     });
   }
@@ -57,11 +59,26 @@ class _WeekDetailScreenState extends State<WeekDetailScreen> with TickerProvider
             borderRadius: BorderRadius.circular(2),
           ),
           tabs: [
-            Tab(text: l.nutrition, icon: const Icon(Icons.restaurant_rounded, size: 20)),
-            Tab(text: l.weight, icon: const Icon(Icons.monitor_weight_rounded, size: 20)),
-            Tab(text: l.steps, icon: const Icon(Icons.directions_walk_rounded, size: 20)),
-            Tab(text: l.assessment, icon: const Icon(Icons.checklist_rounded, size: 20)),
-            Tab(text: l.measurements, icon: const Icon(Icons.straighten_rounded, size: 20)),
+            Tab(
+              text: l.nutrition,
+              icon: const Icon(Icons.restaurant_rounded, size: 20),
+            ),
+            Tab(
+              text: l.weight,
+              icon: const Icon(Icons.monitor_weight_rounded, size: 20),
+            ),
+            Tab(
+              text: l.steps,
+              icon: const Icon(Icons.directions_walk_rounded, size: 20),
+            ),
+            Tab(
+              text: l.assessment,
+              icon: const Icon(Icons.checklist_rounded, size: 20),
+            ),
+            Tab(
+              text: l.measurements,
+              icon: const Icon(Icons.straighten_rounded, size: 20),
+            ),
           ],
         ),
       ),

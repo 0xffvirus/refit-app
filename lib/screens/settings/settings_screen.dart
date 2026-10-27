@@ -8,6 +8,7 @@ import '../../providers/habit_provider.dart';
 import '../../providers/fitness_provider.dart';
 import '../../providers/water_provider.dart';
 import '../../providers/locale_provider.dart';
+import '../../services/backup_codec.dart';
 import '../../services/database_service.dart';
 import '../../services/health_service.dart';
 import '../../services/notification_service.dart';
@@ -116,7 +117,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final result = await Navigator.push<bool>(
           context,
           MaterialPageRoute(
-            builder: (_) => ProfileEditScreen(profile: p ?? UserProfile(onboardingSeen: true)),
+            builder: (_) => ProfileEditScreen(
+              profile: p ?? UserProfile(onboardingSeen: true),
+            ),
           ),
         );
         if (result == true) _loadProfile();
@@ -156,22 +159,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Text(
                           p.name ?? l.profileTitle,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           [
                             if (p.age != null) '${p.age} ${l.profileYears}',
-                            if (p.heightCm != null) '${p.heightCm!.toStringAsFixed(0)} ${l.profileCm}',
-                            if (p.weightKg != null) '${p.weightKg!.toStringAsFixed(0)} ${l.profileKg}',
+                            if (p.heightCm != null)
+                              '${p.heightCm!.toStringAsFixed(0)} ${l.profileCm}',
+                            if (p.weightKg != null)
+                              '${p.weightKg!.toStringAsFixed(0)} ${l.profileKg}',
                           ].join(' · '),
-                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     )
                   : Text(
                       l.setupProfile,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
             ),
             const Icon(Icons.chevron_left, color: AppColors.textTertiary),
@@ -198,7 +212,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 l.calculators,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 10),
               Container(
@@ -214,14 +232,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: _waterColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.water_drop, size: 20, color: _waterColor),
+                    child: const Icon(
+                      Icons.water_drop,
+                      size: 20,
+                      color: _waterColor,
+                    ),
                   ),
-                  title: Text(l.waterIntakeCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.waterIntakeDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  title: Text(
+                    l.waterIntakeCalc,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l.waterIntakeDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_left,
+                    color: AppColors.textTertiary,
+                  ),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const WaterIntakeCalculatorScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const WaterIntakeCalculatorScreen(),
+                    ),
                   ),
                 ),
               ),
@@ -239,14 +278,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.warning.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.local_fire_department, size: 20, color: AppColors.warning),
+                    child: const Icon(
+                      Icons.local_fire_department,
+                      size: 20,
+                      color: AppColors.warning,
+                    ),
                   ),
-                  title: Text(l.macroCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.macroCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  title: Text(
+                    l.macroCalc,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l.macroCalcDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_left,
+                    color: AppColors.textTertiary,
+                  ),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MacroCalculatorScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const MacroCalculatorScreen(),
+                    ),
                   ),
                 ),
               ),
@@ -264,14 +324,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.success.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.monitor_weight_outlined, size: 20, color: AppColors.success),
+                    child: const Icon(
+                      Icons.monitor_weight_outlined,
+                      size: 20,
+                      color: AppColors.success,
+                    ),
                   ),
-                  title: Text(l.bmiCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.bmiCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  title: Text(
+                    l.bmiCalc,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l.bmiCalcDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_left,
+                    color: AppColors.textTertiary,
+                  ),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const BmiCalculatorScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const BmiCalculatorScreen(),
+                    ),
                   ),
                 ),
               ),
@@ -289,11 +370,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.error.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.fitness_center, size: 20, color: AppColors.error),
+                    child: const Icon(
+                      Icons.fitness_center,
+                      size: 20,
+                      color: AppColors.error,
+                    ),
                   ),
-                  title: Text(l.oneRmCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.oneRmCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  title: Text(
+                    l.oneRmCalc,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l.oneRmCalcDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_left,
+                    color: AppColors.textTertiary,
+                  ),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const OneRepMaxScreen()),
@@ -314,11 +414,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.mood.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.percent, size: 20, color: AppColors.mood),
+                    child: const Icon(
+                      Icons.percent,
+                      size: 20,
+                      color: AppColors.mood,
+                    ),
                   ),
-                  title: Text(l.bodyFatCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.bodyFatCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  title: Text(
+                    l.bodyFatCalc,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l.bodyFatCalcDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_left,
+                    color: AppColors.textTertiary,
+                  ),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const BodyFatScreen()),
@@ -339,14 +458,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.accessibility_new, size: 20, color: AppColors.accent),
+                    child: const Icon(
+                      Icons.accessibility_new,
+                      size: 20,
+                      color: AppColors.accent,
+                    ),
                   ),
-                  title: Text(l.idealWeightCalc, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.idealWeightCalcDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+                  title: Text(
+                    l.idealWeightCalc,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l.idealWeightCalcDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_left,
+                    color: AppColors.textTertiary,
+                  ),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const IdealWeightScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const IdealWeightScreen(),
+                    ),
                   ),
                 ),
               ),
@@ -358,7 +498,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 l.notifications,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 10),
               _WaterReminderTile(),
@@ -372,7 +516,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Text(
                   l.appleHealth,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 _HealthSyncTile(),
@@ -382,7 +530,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           Text(
             l.language,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 10),
           Container(
@@ -418,7 +570,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           Text(
             l.backup,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 10),
           Container(
@@ -437,10 +593,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.info.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.upload_file_rounded, color: AppColors.info, size: 20),
+                    child: const Icon(
+                      Icons.upload_file_rounded,
+                      color: AppColors.info,
+                      size: 20,
+                    ),
                   ),
-                  title: Text(l.exportBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.exportBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  title: Text(
+                    l.exportBackup,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l.exportBackupDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                   onTap: () => _exportBackup(context),
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
@@ -451,10 +623,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.download_rounded, color: AppColors.success, size: 20),
+                    child: const Icon(
+                      Icons.download_rounded,
+                      color: AppColors.success,
+                      size: 20,
+                    ),
                   ),
-                  title: Text(l.importBackup, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: Text(l.importBackupDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  title: Text(
+                    l.importBackup,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l.importBackupDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                   onTap: () => _importBackup(context),
                 ),
               ],
@@ -470,12 +658,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l.backupNote,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -484,7 +679,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           Text(
             l.tools,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 10),
           Container(
@@ -500,17 +699,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: AppColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.replay_rounded, size: 20, color: AppColors.accent),
+                child: const Icon(
+                  Icons.replay_rounded,
+                  size: 20,
+                  color: AppColors.accent,
+                ),
               ),
               title: Text(
                 l.tutorialReplayTitle,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               subtitle: Text(
                 l.tutorialReplaySubtitle,
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
-              trailing: const Icon(Icons.chevron_left, color: AppColors.textTertiary),
+              trailing: const Icon(
+                Icons.chevron_left,
+                color: AppColors.textTertiary,
+              ),
               onTap: () async {
                 await TutorialService.instance.resetAllFlags();
                 if (!context.mounted) return;
@@ -561,9 +773,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.importConfirmTitle),
-        content: Text(
-          l.importConfirmBody,
-        ),
+        content: Text(l.importConfirmBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -580,6 +790,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirmed != true || !context.mounted) return;
 
+    var loadingShown = false;
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -590,6 +801,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       if (!context.mounted) return;
       _showLoading(context, l.importing);
+      loadingShown = true;
 
       final file = File(result.files.single.path!);
       final db = DatabaseService();
@@ -600,15 +812,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         context.read<HabitProvider>().initialize();
         context.read<FitnessProvider>().initialize();
+        context.read<WaterProvider>().initialize();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.importSuccess)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.importSuccess)));
       }
     } catch (e) {
       if (context.mounted) {
-        Navigator.pop(context);
-        _showError(context, l.importFailed(e.toString()));
+        if (loadingShown) Navigator.pop(context);
+        final reason = e is BackupFormatException ? e.message : e.toString();
+        _showError(context, l.importFailed(reason));
       }
     }
   }
@@ -624,7 +838,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accent.withValues(alpha: 0.15) : AppColors.surfaceLight,
+          color: isSelected
+              ? AppColors.accent.withValues(alpha: 0.15)
+              : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
@@ -646,7 +862,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
       ),
       trailing: isSelected
-          ? const Icon(Icons.check_circle_rounded, color: AppColors.accent, size: 22)
+          ? const Icon(
+              Icons.check_circle_rounded,
+              color: AppColors.accent,
+              size: 22,
+            )
           : null,
       onTap: onTap,
     );
@@ -669,9 +889,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showError(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -679,10 +899,12 @@ class WaterIntakeCalculatorScreen extends StatefulWidget {
   const WaterIntakeCalculatorScreen({super.key});
 
   @override
-  State<WaterIntakeCalculatorScreen> createState() => _WaterIntakeCalculatorScreenState();
+  State<WaterIntakeCalculatorScreen> createState() =>
+      _WaterIntakeCalculatorScreenState();
 }
 
-class _WaterIntakeCalculatorScreenState extends State<WaterIntakeCalculatorScreen> {
+class _WaterIntakeCalculatorScreenState
+    extends State<WaterIntakeCalculatorScreen> {
   final _weightController = TextEditingController();
   double _multiplier = 35;
   int? _resultMl;
@@ -735,98 +957,114 @@ class _WaterIntakeCalculatorScreenState extends State<WaterIntakeCalculatorScree
               children: [
                 Text(
                   l.enterWeightForWater,
-                  style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
-            controller: _weightController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              hintText: l.enterWeight,
-              suffixText: l.kg,
-              filled: true,
-              fillColor: AppColors.surfaceLight,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            ),
-            onChanged: (_) => _calculate(),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l.consumptionRate,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _multiplierChip(30, l.lowRate, l),
-              const SizedBox(width: 8),
-              _multiplierChip(33, l.mediumRate, l),
-              const SizedBox(width: 8),
-              _multiplierChip(35, l.highRate, l),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l.highRateNote,
-            style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
-          ),
-          if (_resultMl != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _waterColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _waterColor.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    l.dailyNeeds,
-                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  controller: _weightController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l.mlAmount(_resultMl!),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: _waterColor,
+                  decoration: InputDecoration(
+                    hintText: l.enterWeight,
+                    suffixText: l.kg,
+                    filled: true,
+                    fillColor: AppColors.surfaceLight,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
                     ),
                   ),
-                  Text(
-                    '(${(_resultMl! / 1000).toStringAsFixed(1)} ${l.liter})',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: _waterColor.withValues(alpha: 0.7),
-                    ),
+                  onChanged: (_) => _calculate(),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l.consumptionRate,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
                   ),
-                  const SizedBox(height: 12),
-                  SizedBox(
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _multiplierChip(30, l.lowRate, l),
+                    const SizedBox(width: 8),
+                    _multiplierChip(33, l.mediumRate, l),
+                    const SizedBox(width: 8),
+                    _multiplierChip(35, l.highRate, l),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l.highRateNote,
+                  style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
+                ),
+                if (_resultMl != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
                     width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        context.read<WaterProvider>().setGoal(_resultMl!);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l.waterGoalUpdated)),
-                        );
-                      },
-                      icon: const Icon(Icons.check, size: 18),
-                      label: Text(l.setAsDailyGoal),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _waterColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: _waterColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          l.dailyNeeds,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l.mlAmount(_resultMl!),
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: _waterColor,
+                          ),
+                        ),
+                        Text(
+                          '(${(_resultMl! / 1000).toStringAsFixed(1)} ${l.liter})',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _waterColor.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: () {
+                              context.read<WaterProvider>().setGoal(_resultMl!);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(l.waterGoalUpdated)),
+                              );
+                            },
+                            icon: const Icon(Icons.check, size: 18),
+                            label: Text(l.setAsDailyGoal),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ],
-      ),
-    ),
+          ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
@@ -837,12 +1075,19 @@ class _WaterIntakeCalculatorScreenState extends State<WaterIntakeCalculatorScree
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l.waterFormula,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -864,7 +1109,9 @@ class _WaterIntakeCalculatorScreenState extends State<WaterIntakeCalculatorScree
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? _waterColor.withValues(alpha: 0.15) : Colors.transparent,
+            color: isSelected
+                ? _waterColor.withValues(alpha: 0.15)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: isSelected ? _waterColor : AppColors.border,
@@ -886,7 +1133,9 @@ class _WaterIntakeCalculatorScreenState extends State<WaterIntakeCalculatorScree
                 label,
                 style: TextStyle(
                   fontSize: 10,
-                  color: isSelected ? _waterColor.withValues(alpha: 0.7) : AppColors.textTertiary,
+                  color: isSelected
+                      ? _waterColor.withValues(alpha: 0.7)
+                      : AppColors.textTertiary,
                 ),
               ),
             ],
@@ -997,7 +1246,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
   void _calculate() {
     final weight = double.tryParse(_weightController.text.trim());
     if (weight == null || weight <= 0) {
-      setState(() { _bmr = null; });
+      setState(() {
+        _bmr = null;
+      });
       return;
     }
 
@@ -1006,7 +1257,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
     if (_formula == _FormulaType.katchMcArdle) {
       final lbm = double.tryParse(_lbmController.text.trim());
       if (lbm == null || lbm <= 0) {
-        setState(() { _bmr = null; });
+        setState(() {
+          _bmr = null;
+        });
         return;
       }
       bmr = 370 + (21.6 * lbm);
@@ -1014,7 +1267,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
       final height = double.tryParse(_heightController.text.trim());
       final age = int.tryParse(_ageController.text.trim());
       if (height == null || height <= 0 || age == null || age <= 0) {
-        setState(() { _bmr = null; });
+        setState(() {
+          _bmr = null;
+        });
         return;
       }
       bmr = (10 * weight) + (6.25 * height) - (5 * age);
@@ -1030,7 +1285,10 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
     final fatG = (weight * _fatMultiplier).round();
     final proteinCal = proteinG * 4;
     final fatCal = fatG * 9;
-    final carbsG = ((targetCal - proteinCal - fatCal) / 4).round().clamp(0, 9999);
+    final carbsG = ((targetCal - proteinCal - fatCal) / 4).round().clamp(
+      0,
+      9999,
+    );
 
     setState(() {
       _bmr = bmr;
@@ -1064,14 +1322,20 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
             width: double.infinity,
             height: 50,
             child: FilledButton(
-              onPressed: () { FocusScope.of(context).unfocus(); _calculate(); },
-              child: Text(l.calculate, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                _calculate();
+              },
+              child: Text(
+                l.calculate,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
-          if (_bmr != null) ...[
-            const SizedBox(height: 20),
-            _buildResults(l),
-          ],
+          if (_bmr != null) ...[const SizedBox(height: 20), _buildResults(l)],
           const SizedBox(height: 24),
         ],
       ),
@@ -1089,7 +1353,14 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           child,
         ],
@@ -1104,9 +1375,21 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
         children: [
           Row(
             children: [
-              _choiceChip(l.male, _gender == _Gender.male, () => setState(() { _gender = _Gender.male; })),
+              _choiceChip(
+                l.male,
+                _gender == _Gender.male,
+                () => setState(() {
+                  _gender = _Gender.male;
+                }),
+              ),
               const SizedBox(width: 8),
-              _choiceChip(l.female, _gender == _Gender.female, () => setState(() { _gender = _Gender.female; })),
+              _choiceChip(
+                l.female,
+                _gender == _Gender.female,
+                () => setState(() {
+                  _gender = _Gender.female;
+                }),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -1133,9 +1416,21 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
         children: [
           Row(
             children: [
-              _choiceChip('Mifflin-St Jeor', _formula == _FormulaType.mifflinStJeor, () => setState(() { _formula = _FormulaType.mifflinStJeor; })),
+              _choiceChip(
+                'Mifflin-St Jeor',
+                _formula == _FormulaType.mifflinStJeor,
+                () => setState(() {
+                  _formula = _FormulaType.mifflinStJeor;
+                }),
+              ),
               const SizedBox(width: 8),
-              _choiceChip('Katch-McArdle', _formula == _FormulaType.katchMcArdle, () => setState(() { _formula = _FormulaType.katchMcArdle; })),
+              _choiceChip(
+                'Katch-McArdle',
+                _formula == _FormulaType.katchMcArdle,
+                () => setState(() {
+                  _formula = _FormulaType.katchMcArdle;
+                }),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -1164,7 +1459,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
               margin: const EdgeInsets.only(bottom: 6),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent.withValues(alpha: 0.1) : Colors.transparent,
+                color: isSelected
+                    ? AppColors.accent.withValues(alpha: 0.1)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isSelected ? AppColors.accent : AppColors.border,
@@ -1178,8 +1475,12 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
                       activityLabels[i],
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                        color: isSelected ? AppColors.accent : AppColors.textPrimary,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: isSelected
+                            ? AppColors.accent
+                            : AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -1187,7 +1488,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
                     '×${_activityFactors[i]}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isSelected ? AppColors.accent : AppColors.textTertiary,
+                      color: isSelected
+                          ? AppColors.accent
+                          : AppColors.textTertiary,
                     ),
                   ),
                 ],
@@ -1213,7 +1516,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.accent.withValues(alpha: 0.1) : Colors.transparent,
+                  color: isSelected
+                      ? AppColors.accent.withValues(alpha: 0.1)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: isSelected ? AppColors.accent : AppColors.border,
@@ -1227,7 +1532,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? AppColors.accent : AppColors.textSecondary,
+                        color: isSelected
+                            ? AppColors.accent
+                            : AppColors.textSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -1236,7 +1543,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
                       '${_goalAdjustments[g]! >= 0 ? '+' : ''}${_goalAdjustments[g]}',
                       style: TextStyle(
                         fontSize: 10,
-                        color: isSelected ? AppColors.accent.withValues(alpha: 0.7) : AppColors.textTertiary,
+                        color: isSelected
+                            ? AppColors.accent.withValues(alpha: 0.7)
+                            : AppColors.textTertiary,
                       ),
                     ),
                   ],
@@ -1257,7 +1566,13 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.proteinPerKg, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text(
+            l.proteinPerKg,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -1267,9 +1582,14 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
               return GestureDetector(
                 onTap: () => setState(() => _proteinIndex = i),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.accent.withValues(alpha: 0.1) : Colors.transparent,
+                    color: isSelected
+                        ? AppColors.accent.withValues(alpha: 0.1)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected ? AppColors.accent : AppColors.border,
@@ -1280,8 +1600,12 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
                     proteinLabels[i],
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      color: isSelected ? AppColors.accent : AppColors.textSecondary,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: isSelected
+                          ? AppColors.accent
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -1289,41 +1613,59 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
             }),
           ),
           const SizedBox(height: 16),
-          Text(l.fatPerKg, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text(
+            l.fatPerKg,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: [
-              (value: 0.7, label: fatLabelsList[0]),
-              (value: 0.85, label: fatLabelsList[1]),
-              (value: 1.0, label: fatLabelsList[2]),
-              (value: 1.2, label: fatLabelsList[3]),
-            ].map((opt) {
-              final isSelected = _fatMultiplier == opt.value;
-              return GestureDetector(
-                onTap: () => setState(() => _fatMultiplier = opt.value),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.accent.withValues(alpha: 0.1) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? AppColors.accent : AppColors.border,
-                      width: isSelected ? 1.5 : 0.5,
+            children:
+                [
+                  (value: 0.7, label: fatLabelsList[0]),
+                  (value: 0.85, label: fatLabelsList[1]),
+                  (value: 1.0, label: fatLabelsList[2]),
+                  (value: 1.2, label: fatLabelsList[3]),
+                ].map((opt) {
+                  final isSelected = _fatMultiplier == opt.value;
+                  return GestureDetector(
+                    onTap: () => setState(() => _fatMultiplier = opt.value),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.accent.withValues(alpha: 0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.accent
+                              : AppColors.border,
+                          width: isSelected ? 1.5 : 0.5,
+                        ),
+                      ),
+                      child: Text(
+                        opt.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                          color: isSelected
+                              ? AppColors.accent
+                              : AppColors.textSecondary,
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    opt.label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      color: isSelected ? AppColors.accent : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 8),
           Text(
@@ -1362,24 +1704,55 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
             ),
             child: Column(
               children: [
-                Text(l.targetCalories, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                Text(
+                  l.targetCalories,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '$_targetCalories',
-                  style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.accent),
+                  style: const TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.accent,
+                  ),
                 ),
-                Text(l.caloriesPerDay, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                Text(
+                  l.caloriesPerDay,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              _macroCard(l.protein, '$_proteinG ${l.grams}', '${_proteinG! * 4} ${l.calorieSuffix}', AppColors.info),
+              _macroCard(
+                l.protein,
+                '$_proteinG ${l.grams}',
+                '${_proteinG! * 4} ${l.calorieSuffix}',
+                AppColors.info,
+              ),
               const SizedBox(width: 8),
-              _macroCard(l.fats, '$_fatG ${l.grams}', '${_fatG! * 9} ${l.calorieSuffix}', AppColors.warning),
+              _macroCard(
+                l.fats,
+                '$_fatG ${l.grams}',
+                '${_fatG! * 9} ${l.calorieSuffix}',
+                AppColors.warning,
+              ),
               const SizedBox(width: 8),
-              _macroCard(l.carbs, '$_carbsG ${l.grams}', '${_carbsG! * 4} ${l.calorieSuffix}', AppColors.success),
+              _macroCard(
+                l.carbs,
+                '$_carbsG ${l.grams}',
+                '${_carbsG! * 4} ${l.calorieSuffix}',
+                AppColors.success,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -1393,9 +1766,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
                   carbs: _carbsG!.toDouble(),
                   fat: _fatG!.toDouble(),
                 );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l.macroTargetsUpdated)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l.macroTargetsUpdated)));
               },
               icon: const Icon(Icons.check, size: 18),
               label: Text(l.setAsDailyTargets),
@@ -1416,10 +1789,30 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
         ),
         child: Column(
           children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textTertiary, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            Text(unit, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            Text(
+              unit,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
       ),
@@ -1437,11 +1830,31 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
         ),
         child: Column(
           children: [
-            Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
             const SizedBox(height: 6),
-            Text(amount, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(calories, style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7))),
+            Text(
+              calories,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withValues(alpha: 0.7),
+              ),
+            ),
           ],
         ),
       ),
@@ -1455,7 +1868,9 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: selected ? AppColors.accent.withValues(alpha: 0.1) : Colors.transparent,
+            color: selected
+                ? AppColors.accent.withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: selected ? AppColors.accent : AppColors.border,
@@ -1476,7 +1891,12 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
     );
   }
 
-  Widget _inputField(TextEditingController controller, String hint, String suffix, {bool decimal = true}) {
+  Widget _inputField(
+    TextEditingController controller,
+    String hint,
+    String suffix, {
+    bool decimal = true,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: decimal
@@ -1491,7 +1911,10 @@ class _MacroCalculatorScreenState extends State<MacroCalculatorScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -1564,32 +1987,55 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l.dataSection, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                Text(
+                  l.dataSection,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _weightController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     hintText: l.weightField,
                     suffixText: l.kg,
                     filled: true,
                     fillColor: AppColors.surfaceLight,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                   onChanged: (_) => _calculate(),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: _heightController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     hintText: l.heightField,
                     suffixText: l.cm,
                     filled: true,
                     fillColor: AppColors.surfaceLight,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                   onChanged: (_) => _calculate(),
                 ),
@@ -1627,7 +2073,13 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
       ),
       child: Column(
         children: [
-          Text(l.bodyMassIndex, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+          Text(
+            l.bodyMassIndex,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 8),
           TweenAnimationBuilder<double>(
             tween: Tween<double>(end: _bmi!),
@@ -1636,7 +2088,11 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
             builder: (context, value, _) {
               return Text(
                 value.toStringAsFixed(1),
-                style: TextStyle(fontSize: 52, fontWeight: FontWeight.bold, color: color),
+                style: TextStyle(
+                  fontSize: 52,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               );
             },
           ),
@@ -1649,7 +2105,11 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
             ),
             child: Text(
               category,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: color),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -1700,7 +2160,11 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
                       left: (width * position) - 10,
                       child: Column(
                         children: [
-                          Icon(Icons.arrow_drop_down, size: 28, color: _bmiColor(_bmi!)),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            size: 28,
+                            color: _bmiColor(_bmi!),
+                          ),
                         ],
                       ),
                     ),
@@ -1713,11 +2177,26 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('15', style: TextStyle(fontSize: 10, color: AppColors.textTertiary)),
-              Text('18.5', style: TextStyle(fontSize: 10, color: AppColors.textTertiary)),
-              Text('25', style: TextStyle(fontSize: 10, color: AppColors.textTertiary)),
-              Text('30', style: TextStyle(fontSize: 10, color: AppColors.textTertiary)),
-              Text('40', style: TextStyle(fontSize: 10, color: AppColors.textTertiary)),
+              Text(
+                '15',
+                style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
+              ),
+              Text(
+                '18.5',
+                style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
+              ),
+              Text(
+                '25',
+                style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
+              ),
+              Text(
+                '30',
+                style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
+              ),
+              Text(
+                '40',
+                style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
+              ),
             ],
           ),
         ],
@@ -1743,11 +2222,28 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.categories, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.categories,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           _categoryRow(l.underweight, '< 18.5', AppColors.info, _bmi! < 18.5),
-          _categoryRow(l.normalWeight, '18.5 - 24.9', AppColors.success, _bmi! >= 18.5 && _bmi! < 25),
-          _categoryRow(l.overweight, '25 - 29.9', AppColors.warning, _bmi! >= 25 && _bmi! < 30),
+          _categoryRow(
+            l.normalWeight,
+            '18.5 - 24.9',
+            AppColors.success,
+            _bmi! >= 18.5 && _bmi! < 25,
+          ),
+          _categoryRow(
+            l.overweight,
+            '25 - 29.9',
+            AppColors.warning,
+            _bmi! >= 25 && _bmi! < 30,
+          ),
           _categoryRow(l.obese, '≥ 30', AppColors.error, _bmi! >= 30),
         ],
       ),
@@ -1786,7 +2282,10 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
           ),
           Text(
             range,
-            style: TextStyle(fontSize: 12, color: isActive ? color : AppColors.textTertiary),
+            style: TextStyle(
+              fontSize: 12,
+              color: isActive ? color : AppColors.textTertiary,
+            ),
           ),
         ],
       ),
@@ -1804,15 +2303,36 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.sources, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          Text(
+            l.sources,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
-          Text(l.bmiSource, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Text(
+            l.bmiSource,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 8),
           GestureDetector(
-            onTap: () => launchUrl(Uri.parse('https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight')),
+            onTap: () => launchUrl(
+              Uri.parse(
+                'https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight',
+              ),
+            ),
             child: const Text(
               'who.int — BMI Classification',
-              style: TextStyle(fontSize: 12, color: AppColors.info, decoration: TextDecoration.underline),
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.info,
+                decoration: TextDecoration.underline,
+              ),
             ),
           ),
         ],
@@ -1831,15 +2351,31 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.warning),
+          const Icon(
+            Icons.warning_amber_rounded,
+            size: 18,
+            color: AppColors.warning,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l.bmiDisclaimer, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(
+                  l.bmiDisclaimer,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text(l.medicalDisclaimer, style: const TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+                Text(
+                  l.medicalDisclaimer,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1882,7 +2418,12 @@ class _HealthSyncTileState extends State<_HealthSyncTile> {
 
   Future<void> _loadState() async {
     final enabled = await _health.isEnabled;
-    if (mounted) setState(() { _enabled = enabled; _loading = false; });
+    if (mounted) {
+      setState(() {
+        _enabled = enabled;
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _toggle(bool value) async {
@@ -1891,9 +2432,9 @@ class _HealthSyncTileState extends State<_HealthSyncTile> {
       if (!granted) {
         if (mounted) {
           final l = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.healthPermissionDenied)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l.healthPermissionDenied)));
         }
         return;
       }
@@ -1925,15 +2466,26 @@ class _HealthSyncTileState extends State<_HealthSyncTile> {
             color: AppColors.error.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.favorite_rounded, size: 20, color: AppColors.error),
+          child: const Icon(
+            Icons.favorite_rounded,
+            size: 20,
+            color: AppColors.error,
+          ),
         ),
-        title: Text(l.syncAppleHealth, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        title: Text(
+          l.syncAppleHealth,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
         subtitle: Text(
           _syncing ? l.syncing : l.healthSyncData,
           style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
         ),
         trailing: _loading
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             : Switch(value: _enabled, onChanged: _toggle),
       ),
     );
@@ -1960,9 +2512,9 @@ class _WaterReminderTileState extends State<_WaterReminderTile> {
     });
     if (value && !applied) {
       final l = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.notificationsPermissionDenied)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.notificationsPermissionDenied)));
     }
   }
 
@@ -1982,12 +2534,26 @@ class _WaterReminderTileState extends State<_WaterReminderTile> {
             color: _waterColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.notifications_active_rounded, size: 20, color: _waterColor),
+          child: const Icon(
+            Icons.notifications_active_rounded,
+            size: 20,
+            color: _waterColor,
+          ),
         ),
-        title: Text(l.waterReminders, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-        subtitle: Text(l.waterRemindersDesc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        title: Text(
+          l.waterReminders,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        subtitle: Text(
+          l.waterRemindersDesc,
+          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+        ),
         trailing: _busy
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             : Switch(value: _enabled, onChanged: _toggle),
       ),
     );

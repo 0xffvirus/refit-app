@@ -18,8 +18,8 @@ class _ReminderSlot {
 }
 
 const List<_ReminderSlot> _reminderSlots = [
-  _ReminderSlot(100, 7, 0),   // Wake-up
-  _ReminderSlot(101, 9, 0),   // Mid-morning
+  _ReminderSlot(100, 7, 0), // Wake-up
+  _ReminderSlot(101, 9, 0), // Mid-morning
   _ReminderSlot(102, 11, 30), // Before lunch
   _ReminderSlot(103, 13, 30), // Mid-afternoon
   _ReminderSlot(104, 15, 30), // Late afternoon
@@ -34,7 +34,8 @@ class NotificationService {
 
   static NotificationService get instance => _instance;
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
 
@@ -57,19 +58,26 @@ class NotificationService {
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
-    const initSettings = InitializationSettings(android: androidInit, iOS: iosInit);
+    const initSettings = InitializationSettings(
+      android: androidInit,
+      iOS: iosInit,
+    );
 
     await _plugin.initialize(initSettings);
 
     // Ensure Android notification channel exists.
     final androidImpl = _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    await androidImpl?.createNotificationChannel(const AndroidNotificationChannel(
-      _channelId,
-      _channelName,
-      description: _channelDesc,
-      importance: Importance.defaultImportance,
-    ));
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    await androidImpl?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _channelId,
+        _channelName,
+        description: _channelDesc,
+        importance: Importance.defaultImportance,
+      ),
+    );
 
     final prefs = await SharedPreferences.getInstance();
     _enabled = prefs.getBool(_waterRemindersEnabledKey) ?? false;
@@ -104,15 +112,24 @@ class NotificationService {
   Future<bool> _requestPermissions() async {
     if (Platform.isIOS) {
       final iosImpl = _plugin
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-      final granted = await iosImpl?.requestPermissions(alert: true, badge: true, sound: true);
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      final granted = await iosImpl?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
       return granted ?? false;
     }
     if (Platform.isAndroid) {
       final androidImpl = _plugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       final granted = await androidImpl?.requestNotificationsPermission();
-      return granted ?? true; // null means API < 33 where permission is implicit.
+      return granted ??
+          true; // null means API < 33 where permission is implicit.
     }
     return false;
   }
@@ -136,7 +153,10 @@ class NotificationService {
       priority: Priority.defaultPriority,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
 
     try {
       await _plugin.zonedSchedule(
@@ -146,18 +166,27 @@ class NotificationService {
         scheduledDate,
         details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time, // Repeat daily at this time.
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents:
+            DateTimeComponents.time, // Repeat daily at this time.
       );
     } catch (e) {
-      // Swallow scheduling errors (e.g. exact-alarm permission denied) — they are non-fatal.
+      // Swallow scheduling errors — reminders are best-effort and non-fatal.
       debugPrint('NotificationService: failed to schedule slot ${slot.id}: $e');
     }
   }
 
   tz.TZDateTime _nextInstanceOf(int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var scheduled = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
     if (scheduled.isBefore(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
@@ -180,7 +209,13 @@ class NotificationService {
     final upcoming = _nextSlotAfter(now);
     if (upcoming == null) return;
 
-    final slotTime = DateTime(now.year, now.month, now.day, upcoming.hour, upcoming.minute);
+    final slotTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      upcoming.hour,
+      upcoming.minute,
+    );
     final diff = slotTime.difference(now);
 
     // Only suppress if the next slot is later today AND within 60 min.
@@ -209,7 +244,10 @@ class NotificationService {
       priority: Priority.defaultPriority,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
     try {
       await _plugin.zonedSchedule(
         slot.id,
@@ -218,11 +256,14 @@ class NotificationService {
         when,
         details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
-      debugPrint('NotificationService: failed to reschedule slot ${slot.id}: $e');
+      debugPrint(
+        'NotificationService: failed to reschedule slot ${slot.id}: $e',
+      );
     }
   }
 

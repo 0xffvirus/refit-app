@@ -8,6 +8,7 @@ import '../models/body_measurement.dart';
 import '../models/step_entry.dart';
 import '../services/database_service.dart';
 import '../services/health_service.dart';
+import '../utils/request_sequencer.dart';
 
 class FitnessProvider extends ChangeNotifier {
   final DatabaseService _db = DatabaseService();
@@ -18,7 +19,12 @@ class FitnessProvider extends ChangeNotifier {
   List<FitnessWeek> get weeks => _weeks;
 
   // Macro targets (persistent across weeks)
-  Map<String, double> _macroTargets = {'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0};
+  Map<String, double> _macroTargets = {
+    'calories': 0,
+    'protein': 0,
+    'carbs': 0,
+    'fat': 0,
+  };
   Map<String, double> get macroTargets => _macroTargets;
 
   // Step goal (persistent across weeks)
@@ -31,6 +37,24 @@ class FitnessProvider extends ChangeNotifier {
   List<StepEntry> _stepEntries = [];
   WeeklyAssessment? _assessment;
   BodyMeasurement? _measurement;
+
+  // The week whose details are loaded. Async results for any other week are
+  // dropped so they can't overwrite what the user is looking at.
+  String? _activeWeekId;
+  final _weekLoads = RequestSequencer();
+  Future<void>? _healthSync;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
 
   List<NutritionEntry> get nutritionEntries => _nutritionEntries;
   List<WeightEntry> get weightEntries => _weightEntries;
@@ -50,8 +74,10 @@ class FitnessProvider extends ChangeNotifier {
     }
     final count = _nutritionEntries.length;
     return {
-      'calories': _nutritionEntries.fold<double>(0, (a, e) => a + e.calories) / count,
-      'protein': _nutritionEntries.fold<double>(0, (a, e) => a + e.protein) / count,
+      'calories':
+          _nutritionEntries.fold<double>(0, (a, e) => a + e.calories) / count,
+      'protein':
+          _nutritionEntries.fold<double>(0, (a, e) => a + e.protein) / count,
       'carbs': _nutritionEntries.fold<double>(0, (a, e) => a + e.carbs) / count,
       'fat': _nutritionEntries.fold<double>(0, (a, e) => a + e.fat) / count,
     };
@@ -73,7 +99,15 @@ class FitnessProvider extends ChangeNotifier {
     return matches.isEmpty ? null : matches.first;
   }
 
-  Future<void> syncHealthData() async {
+  /// Syncs health data for the current week. Concurrent calls (app start and
+  /// resume firing together) share a single in-flight sync.
+  Future<void> syncHealthData() {
+    return _healthSync ??= _syncHealthData().whenComplete(() {
+      _healthSync = null;
+    });
+  }
+
+  Future<void> _syncHealthData() async {
     await _health.syncCurrentWeek(
       existingWeeks: _weeks,
       createWeek: (startDate) async {
@@ -83,7 +117,8 @@ class FitnessProvider extends ChangeNotifier {
         return week;
       },
       loadWeekDetails: (weekId) async {
-        await loadWeekDetails(weekId);
+        // Only refresh if the synced week is the one on screen.
+        if (weekId == _activeWeekId) await loadWeekDetails(weekId);
       },
     );
     // Refresh weeks list in case a new one was created
@@ -110,7 +145,12 @@ class FitnessProvider extends ChangeNotifier {
       carbs: carbs,
       fat: fat,
     );
-    _macroTargets = {'calories': calories, 'protein': protein, 'carbs': carbs, 'fat': fat};
+    _macroTargets = {
+      'calories': calories,
+      'protein': protein,
+      'carbs': carbs,
+      'fat': fat,
+    };
     notifyListeners();
   }
 
@@ -121,12 +161,33 @@ class FitnessProvider extends ChangeNotifier {
   }
 
   Future<void> loadWeekDetails(String weekId) async {
-    _nutritionEntries = await _db.fetchNutritionForWeek(weekId);
-    _weightEntries = await _db.fetchWeightsForWeek(weekId);
-    _stepEntries = await _db.fetchStepsForWeek(weekId);
-    _assessment = await _db.fetchAssessmentForWeek(weekId);
-    _measurement = await _db.fetchMeasurementForWeek(weekId);
+    final token = _weekLoads.next();
+    if (weekId != _activeWeekId) {
+      // Don't show the previous week's data while the new one loads.
+      _activeWeekId = weekId;
+      _clearWeekDetails();
+      notifyListeners();
+    }
+    final nutrition = await _db.fetchNutritionForWeek(weekId);
+    final weights = await _db.fetchWeightsForWeek(weekId);
+    final steps = await _db.fetchStepsForWeek(weekId);
+    final assessment = await _db.fetchAssessmentForWeek(weekId);
+    final measurement = await _db.fetchMeasurementForWeek(weekId);
+    if (!_weekLoads.isCurrent(token)) return;
+    _nutritionEntries = nutrition;
+    _weightEntries = weights;
+    _stepEntries = steps;
+    _assessment = assessment;
+    _measurement = measurement;
     notifyListeners();
+  }
+
+  void _clearWeekDetails() {
+    _nutritionEntries = [];
+    _weightEntries = [];
+    _stepEntries = [];
+    _assessment = null;
+    _measurement = null;
   }
 
   Future<FitnessWeek> createWeek(DateTime startDate) async {
@@ -138,6 +199,11 @@ class FitnessProvider extends ChangeNotifier {
 
   Future<void> deleteWeek(String weekId) async {
     await _db.deleteFitnessWeek(weekId);
+    if (weekId == _activeWeekId) {
+      _activeWeekId = null;
+      _weekLoads.invalidate();
+      _clearWeekDetails();
+    }
     _weeks = await _db.fetchAllFitnessWeeks();
     notifyListeners();
   }
@@ -160,7 +226,9 @@ class FitnessProvider extends ChangeNotifier {
       fat: fat,
     );
     await _db.upsertNutritionEntry(entry);
-    _nutritionEntries = await _db.fetchNutritionForWeek(weekId);
+    final entries = await _db.fetchNutritionForWeek(weekId);
+    if (weekId != _activeWeekId) return;
+    _nutritionEntries = entries;
     notifyListeners();
   }
 
@@ -176,7 +244,9 @@ class FitnessProvider extends ChangeNotifier {
       weight: weight,
     );
     await _db.upsertWeightEntry(entry);
-    _weightEntries = await _db.fetchWeightsForWeek(weekId);
+    final entries = await _db.fetchWeightsForWeek(weekId);
+    if (weekId != _activeWeekId) return;
+    _weightEntries = entries;
     notifyListeners();
   }
 
@@ -201,6 +271,7 @@ class FitnessProvider extends ChangeNotifier {
       stepsCommitted: stepsCommitted,
     );
     await _db.upsertWeeklyAssessment(assessment);
+    if (weekId != _activeWeekId) return;
     _assessment = assessment;
     notifyListeners();
   }
@@ -230,6 +301,7 @@ class FitnessProvider extends ChangeNotifier {
       backPhotoPath: backPhotoPath ?? existing?.backPhotoPath,
     );
     await _db.upsertBodyMeasurement(m);
+    if (weekId != _activeWeekId) return;
     _measurement = m;
     notifyListeners();
   }
@@ -240,7 +312,9 @@ class FitnessProvider extends ChangeNotifier {
 
   NutritionEntry? getNutritionForDate(DateTime date) {
     final dateStr = _dateOnly(date);
-    final matches = _nutritionEntries.where((e) => _dateOnly(e.date) == dateStr);
+    final matches = _nutritionEntries.where(
+      (e) => _dateOnly(e.date) == dateStr,
+    );
     return matches.isEmpty ? null : matches.first;
   }
 

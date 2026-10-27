@@ -4,10 +4,14 @@ import '../models/habit.dart';
 import '../models/habit_entry.dart';
 import '../models/daily_log.dart';
 import '../services/database_service.dart';
+import '../utils/request_sequencer.dart';
 
 class HabitProvider extends ChangeNotifier {
   final DatabaseService _db = DatabaseService();
   final _uuid = const Uuid();
+  final _monthLoads = RequestSequencer();
+  final _streakLoads = RequestSequencer();
+  bool _disposed = false;
 
   List<Habit> _habits = [];
   List<HabitEntry> _entries = [];
@@ -33,36 +37,61 @@ class HabitProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
+  /// Loads entries and logs for the selected month. Results are discarded if
+  /// a newer load started meanwhile (e.g. the user switched months quickly),
+  /// so stale data never overwrites the current month.
   Future<void> _loadMonthData() async {
-    _entries = await _db.fetchHabitEntriesForMonth(_selectedYear, _selectedMonth);
-    _dailyLogs = await _db.fetchDailyLogsForMonth(_selectedYear, _selectedMonth);
+    final token = _monthLoads.next();
+    final year = _selectedYear;
+    final month = _selectedMonth;
+    final entries = await _db.fetchHabitEntriesForMonth(year, month);
+    final logs = await _db.fetchDailyLogsForMonth(year, month);
+    if (!_monthLoads.isCurrent(token)) return;
+    _entries = entries;
+    _dailyLogs = logs;
   }
 
   Future<void> _loadStreaks() async {
+    final token = _streakLoads.next();
     final Map<String, int> newStreaks = {};
     for (final habit in _habits) {
       newStreaks[habit.id] = await _db.fetchCurrentStreak(habit.id);
     }
+    if (!_streakLoads.isCurrent(token)) return;
     _streaks = newStreaks;
   }
 
-  void setMonth(int year, int month) {
+  Future<void> setMonth(int year, int month) async {
     _selectedYear = year;
     _selectedMonth = month;
-    _loadMonthData().then((_) => notifyListeners());
+    await _loadMonthData();
+    notifyListeners();
   }
 
   bool isHabitCompletedOn(String habitId, int day) {
     final dateStr = _formatDate(_selectedYear, _selectedMonth, day);
     return _entries.any(
-      (e) => e.habitId == habitId && _dateOnly(e.date) == dateStr && e.completed,
+      (e) =>
+          e.habitId == habitId && _dateOnly(e.date) == dateStr && e.completed,
     );
   }
 
   bool isHabitCompletedOnDate(String habitId, DateTime date) {
     final dateStr = _dateOnly(date);
     return _entries.any(
-      (e) => e.habitId == habitId && _dateOnly(e.date) == dateStr && e.completed,
+      (e) =>
+          e.habitId == habitId && _dateOnly(e.date) == dateStr && e.completed,
     );
   }
 
@@ -128,7 +157,7 @@ class HabitProvider extends ChangeNotifier {
       sleepHours: sleepHours,
     );
     await _db.upsertDailyLog(log);
-    _dailyLogs = await _db.fetchDailyLogsForMonth(_selectedYear, _selectedMonth);
+    await _loadMonthData();
     notifyListeners();
   }
 
@@ -149,7 +178,8 @@ class HabitProvider extends ChangeNotifier {
   double habitCompletionRate(String habitId) {
     final totalDays = daysInMonth;
     final today = DateTime.now();
-    final maxDay = (_selectedYear == today.year && _selectedMonth == today.month)
+    final maxDay =
+        (_selectedYear == today.year && _selectedMonth == today.month)
         ? today.day
         : totalDays;
 
@@ -172,7 +202,9 @@ class HabitProvider extends ChangeNotifier {
   }
 
   List<MapEntry<Habit, double>> habitRanking() {
-    final ranked = _habits.map((h) => MapEntry(h, habitCompletionRate(h.id))).toList();
+    final ranked = _habits
+        .map((h) => MapEntry(h, habitCompletionRate(h.id)))
+        .toList();
     ranked.sort((a, b) => b.value.compareTo(a.value));
     return ranked;
   }

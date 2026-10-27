@@ -41,7 +41,12 @@ class HealthService {
     HealthDataAccess.READ_WRITE,
   ];
 
+  /// Health sync is only implemented for Apple HealthKit. Android (Health
+  /// Connect) is not wired up, so it always reports disabled there.
+  static bool get isSupported => Platform.isIOS;
+
   Future<bool> get isEnabled async {
+    if (!isSupported) return false;
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_healthEnabledKey) ?? false;
   }
@@ -56,7 +61,10 @@ class HealthService {
 
     try {
       Health().configure();
-      final granted = await Health().requestAuthorization(_types, permissions: _permissions);
+      final granted = await Health().requestAuthorization(
+        _types,
+        permissions: _permissions,
+      );
       return granted;
     } catch (e) {
       return false;
@@ -97,7 +105,11 @@ class HealthService {
     final weekId = currentWeek.id;
 
     // Sync each day of the current week up to today
-    for (var d = weekStart; !d.isAfter(today) && !d.isAfter(weekEnd); d = d.add(const Duration(days: 1))) {
+    for (
+      var d = weekStart;
+      !d.isAfter(today) && !d.isAfter(weekEnd);
+      d = d.add(const Duration(days: 1))
+    ) {
       await _syncDayData(weekId, d);
     }
 
@@ -106,7 +118,9 @@ class HealthService {
 
   Future<void> _syncDayData(String weekId, DateTime date) async {
     final start = DateTime(date.year, date.month, date.day);
-    final end = start.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
+    final end = start
+        .add(const Duration(days: 1))
+        .subtract(const Duration(seconds: 1));
 
     await Future.wait([
       _syncNutrition(weekId, date, start, end),
@@ -116,22 +130,31 @@ class HealthService {
     ]);
   }
 
-  Future<void> _syncNutrition(String weekId, DateTime date, DateTime start, DateTime end) async {
+  Future<void> _syncNutrition(
+    String weekId,
+    DateTime date,
+    DateTime start,
+    DateTime end,
+  ) async {
     try {
       final caloriesData = await Health().getHealthDataFromTypes(
-        startTime: start, endTime: end,
+        startTime: start,
+        endTime: end,
         types: [HealthDataType.DIETARY_ENERGY_CONSUMED],
       );
       final proteinData = await Health().getHealthDataFromTypes(
-        startTime: start, endTime: end,
+        startTime: start,
+        endTime: end,
         types: [HealthDataType.DIETARY_PROTEIN_CONSUMED],
       );
       final carbsData = await Health().getHealthDataFromTypes(
-        startTime: start, endTime: end,
+        startTime: start,
+        endTime: end,
         types: [HealthDataType.DIETARY_CARBS_CONSUMED],
       );
       final fatData = await Health().getHealthDataFromTypes(
-        startTime: start, endTime: end,
+        startTime: start,
+        endTime: end,
         types: [HealthDataType.DIETARY_FATS_CONSUMED],
       );
 
@@ -141,36 +164,47 @@ class HealthService {
       final fat = _sumNumericValues(fatData);
 
       if (calories > 0 || protein > 0 || carbs > 0 || fat > 0) {
-        await _db.upsertNutritionEntry(NutritionEntry(
-          id: _uuid.v4(),
-          weekId: weekId,
-          date: date,
-          calories: calories,
-          protein: protein,
-          carbs: carbs,
-          fat: fat,
-        ));
+        await _db.upsertNutritionEntry(
+          NutritionEntry(
+            id: _uuid.v4(),
+            weekId: weekId,
+            date: date,
+            calories: calories,
+            protein: protein,
+            carbs: carbs,
+            fat: fat,
+          ),
+        );
       }
     } catch (_) {}
   }
 
-  Future<void> _syncWeight(String weekId, DateTime date, DateTime start, DateTime end) async {
+  Future<void> _syncWeight(
+    String weekId,
+    DateTime date,
+    DateTime start,
+    DateTime end,
+  ) async {
     try {
       final data = await Health().getHealthDataFromTypes(
-        startTime: start, endTime: end,
+        startTime: start,
+        endTime: end,
         types: [HealthDataType.WEIGHT],
       );
 
       if (data.isNotEmpty) {
         final latest = data.last;
-        final value = (latest.value as NumericHealthValue).numericValue.toDouble();
+        final value = (latest.value as NumericHealthValue).numericValue
+            .toDouble();
         if (value > 0) {
-          await _db.upsertWeightEntry(WeightEntry(
-            id: _uuid.v4(),
-            weekId: weekId,
-            date: date,
-            weight: value,
-          ));
+          await _db.upsertWeightEntry(
+            WeightEntry(
+              id: _uuid.v4(),
+              weekId: weekId,
+              date: date,
+              weight: value,
+            ),
+          );
         }
       }
     } catch (_) {}
@@ -183,7 +217,8 @@ class HealthService {
       final sleepEnd = DateTime(date.year, date.month, date.day, 12);
 
       final data = await Health().getHealthDataFromTypes(
-        startTime: sleepStart, endTime: sleepEnd,
+        startTime: sleepStart,
+        endTime: sleepEnd,
         types: [HealthDataType.SLEEP_ASLEEP],
       );
 
@@ -194,32 +229,42 @@ class HealthService {
         }
         final hours = totalMinutes / 60;
         if (hours > 0) {
-          await _db.upsertDailyLog(DailyLog(
-            id: _uuid.v4(),
-            date: date,
-            mood: 3, // neutral default
-            sleepHours: double.parse(hours.toStringAsFixed(1)),
-          ));
+          await _db.upsertDailyLog(
+            DailyLog(
+              id: _uuid.v4(),
+              date: date,
+              mood: 3, // neutral default
+              sleepHours: double.parse(hours.toStringAsFixed(1)),
+            ),
+          );
         }
       }
     } catch (_) {}
   }
 
-  Future<void> _syncSteps(String weekId, DateTime date, DateTime start, DateTime end) async {
+  Future<void> _syncSteps(
+    String weekId,
+    DateTime date,
+    DateTime start,
+    DateTime end,
+  ) async {
     try {
       final data = await Health().getHealthDataFromTypes(
-        startTime: start, endTime: end,
+        startTime: start,
+        endTime: end,
         types: [HealthDataType.STEPS],
       );
 
       final totalSteps = _sumNumericValues(data).toInt();
       if (totalSteps > 0) {
-        await _db.upsertStepEntry(StepEntry(
-          id: _uuid.v4(),
-          weekId: weekId,
-          date: date,
-          steps: totalSteps,
-        ));
+        await _db.upsertStepEntry(
+          StepEntry(
+            id: _uuid.v4(),
+            weekId: weekId,
+            date: date,
+            steps: totalSteps,
+          ),
+        );
       }
     } catch (_) {}
   }

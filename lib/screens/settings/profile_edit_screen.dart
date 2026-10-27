@@ -14,9 +14,9 @@ class ProfileEditScreen extends StatelessWidget {
     await db.updateUserProfile(updated);
     if (!context.mounted) return;
     final l = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l.profileSaved)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l.profileSaved)));
     Navigator.pop(context, true);
   }
 

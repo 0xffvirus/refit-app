@@ -32,17 +32,17 @@ Refit is an offline-first habit tracking and fitness app built with Flutter. It 
 - Calorie and macro tracking with customizable targets and averages
 - Body measurement photos for side-by-side progress
 - Weekly self-assessments
-- Step tracking synced with Apple Health / Health Connect
+- Step tracking, with Apple Health sync on iOS
 
 ### Water
 - Daily water intake tracking
 - Reminder notifications
-- Apple Health sync
+- Apple Health sync (iOS)
 
 ### Tools
 - Water intake, calorie & macro, BMI, 1RM, body fat, and ideal weight calculators
 - Profile-aware pre-fill so calculators use your saved data
-- Apple Health sync toggle
+- Apple Health sync toggle (iOS only)
 
 ### App
 - Full Arabic and English support with RTL/LTR layouts
@@ -66,7 +66,7 @@ Refit is an offline-first habit tracking and fitness app built with Flutter. It 
 | State management | `provider` (`ChangeNotifier`) |
 | Local database | `sqflite` |
 | Charts | `fl_chart` |
-| Health data | `health` (Apple Health / Health Connect) |
+| Health data | `health` (Apple HealthKit, iOS only) |
 | Notifications | `flutter_local_notifications` + `timezone` |
 | Home widgets | `home_widget` |
 | Auth | `local_auth` |
@@ -78,7 +78,8 @@ Refit is an offline-first habit tracking and fitness app built with Flutter. It 
 ## Architecture
 
 - **State:** Four global `ChangeNotifier` providers in `lib/providers/` — `HabitProvider` (habits, entries, daily logs, streaks), `FitnessProvider` (fitness weeks, nutrition, weight, steps, measurements, assessments, macro targets), `WaterProvider`, and `LocaleProvider`.
-- **Data:** A single `DatabaseService` singleton backed by sqflite. All tables use UUID primary keys, dates are stored as ISO 8601 strings, and inserts use `ConflictAlgorithm.replace`. The database is currently at schema version 2.
+- **Data:** A single `DatabaseService` singleton backed by sqflite. All tables use UUID primary keys, dates are stored as ISO 8601 strings, and inserts use `ConflictAlgorithm.replace`. The database is currently at schema version 6.
+- **Backup:** JSON export/import. Backups are validated in full (`lib/services/backup_codec.dart`) before anything is replaced, and restored in a single transaction, so an invalid file never touches existing data. Backups from older app versions are accepted.
 - **UI:** RTL/LTR is driven by `LocaleProvider` via a `Directionality` wrapper. The theme lives in `lib/utils/app_theme.dart`.
 
 ## Project Structure
@@ -126,14 +127,27 @@ flutter test
 ### Build
 
 ```bash
-flutter build apk      # Android
+flutter build apk      # Android (requires release signing, below)
 flutter build ios      # iOS
 ```
 
+#### Android release signing
+
+Release builds are never signed with the debug key implicitly — they fail with a clear error until signing is configured:
+
+1. Create an upload keystore (keep it out of the repo):
+   ```bash
+   keytool -genkey -v -keystore ~/refit-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+   ```
+2. Copy `android/key.properties.example` to `android/key.properties` (gitignored) and fill in `storeFile`, `storePassword`, `keyAlias`, `keyPassword`.
+   In CI, set `REFIT_KEYSTORE_PATH`, `REFIT_KEYSTORE_PASSWORD`, `REFIT_KEY_ALIAS`, and `REFIT_KEY_PASSWORD` instead.
+
+For a local release build you don't intend to distribute (e.g. `flutter run --release`), you can opt into debug signing explicitly with `REFIT_ALLOW_DEBUG_SIGNING=true`.
+
 ## Platform Notes
 
-- **iOS:** HealthKit usage descriptions are declared in `ios/Runner/Info.plist`. Enable the HealthKit capability in Xcode before building. Camera and photo library access are used for body measurement photos.
-- **Android:** The app requests notification and exact alarm permissions. Step sync uses Health Connect when available.
+- **iOS:** Health sync (nutrition, weight, sleep, steps read; water write) uses Apple HealthKit. Usage descriptions are declared in `ios/Runner/Info.plist`; enable the HealthKit capability in Xcode before building. Camera and photo library access are used for body measurement photos.
+- **Android:** Health sync is not available — Health Connect is not integrated, so the Apple Health section is hidden and all fitness data is entered manually. Water reminders request the notification permission (Android 13+) and use inexact scheduling, so no exact-alarm permission is needed; they are restored after a reboot.
 - **Storage:** Everything is stored locally with sqflite — there is no backend service.
 
 ## Privacy
